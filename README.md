@@ -33,4 +33,4 @@ Online mode play with Bluetooth.
 Introduce customizable board sizes.
 
 -- Author --
--- Alok Kumar
+  Alok Kumar
