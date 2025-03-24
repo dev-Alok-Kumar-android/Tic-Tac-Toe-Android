@@ -13,7 +13,7 @@ Interactive UI: Easy-to-use interface for seamless gameplay.
 
 Game Logic: Ensures valid moves and determines the winner or draw efficiently.
 
-Technology Stack
+Technology Stack : 
 Languages: Java,
 Algorithm: Minimax algorithm (for Hard AI difficulty)
 
