@@ -60,7 +60,7 @@ fun HistoryItem(item: GameHistory) {
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }
     Column(Modifier.padding(8.dp)) {
         Text("Mode: ${item.mode}", style = MaterialTheme.typography.bodyLarge)
-        Text("Result:\n\t X Wins: ${item.state.oWins}\n\t O Wins: ${item.state.xWins}\n\t Draws: ${item.state.draws}", style = MaterialTheme.typography.bodyLarge)
+        Text("Result:\n\t X Wins: ${item.state.xWins}\n\t O Wins: ${item.state.oWins}\n\t Draws: ${item.state.draws}", style = MaterialTheme.typography.bodyLarge)
         Text("Date: ${dateFormat.format(item.dateMillis)}", style = MaterialTheme.typography.bodySmall)
     }
 }
