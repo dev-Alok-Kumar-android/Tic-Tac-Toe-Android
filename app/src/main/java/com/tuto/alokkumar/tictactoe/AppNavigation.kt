@@ -147,8 +147,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             composable("about") {
-                AboutScreen(
-                    version = "2.0.0", onBack = { navController.popBackStack() })
+                AboutScreen(onBack = { navController.popBackStack() })
             }
 
         }

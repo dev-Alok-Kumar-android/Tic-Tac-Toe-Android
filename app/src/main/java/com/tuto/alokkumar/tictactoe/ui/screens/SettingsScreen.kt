@@ -44,6 +44,11 @@ fun SettingsScreen(
     val bgmEnabled by viewModel.bgmEnabled.collectAsState()
     val themeDark by viewModel.themeDark.collectAsState()
     val soundEnabled by viewModel.soundEnabled.collectAsState()
+    val version = LocalContext.current.packageManager.getPackageInfo(
+        LocalContext.current.packageName,
+        0
+    ).versionName ?: "Unknown"
+    val year = java.time.Year.now().value
 
     Scaffold(
         topBar = {
@@ -65,7 +70,9 @@ fun SettingsScreen(
 
             // 🎮 Game Mode
             Text("Game Difficulty", style = MaterialTheme.typography.titleMedium)
-            GameModeSelector(selectedMode = selectedGameMode, onSelect = { viewModel.setGameMode(it) })
+            GameModeSelector(
+                selectedMode = selectedGameMode,
+                onSelect = { viewModel.setGameMode(it) })
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
             SwitchSetting(
@@ -101,8 +108,8 @@ fun SettingsScreen(
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
             Spacer(modifier = Modifier.weight(1f))
-            Text("Version 1.0", style = MaterialTheme.typography.bodySmall)
-            Text("© 2025 Tic Tac Toe Game", style = MaterialTheme.typography.bodySmall)
+            Text("Version v$version", style = MaterialTheme.typography.bodySmall)
+            Text("© $year Tic Tac Toe Game", style = MaterialTheme.typography.bodySmall)
             Text("Developed by Alok Kumar", style = MaterialTheme.typography.bodySmall)
         }
     }
@@ -116,7 +123,7 @@ fun SwitchSetting(
     text: String,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

@@ -32,11 +32,16 @@ import androidx.core.net.toUri
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
-    version: String = "1.0.0",
     onBack: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scroll = rememberScrollState()
+    val year = java.time.Year.now().value
+    val version = LocalContext.current.packageManager.getPackageInfo(
+        LocalContext.current.packageName,
+        0
+    ).versionName ?: "Unknown"
+
 
     Scaffold(
         topBar = {
@@ -119,8 +124,10 @@ fun AboutScreen(
 
             TextButton(
                 onClick = {
-                    val githubIntent = Intent(Intent.ACTION_VIEW,
-                        "https://github.com/dev-Alok-Kumar-android".toUri())
+                    val githubIntent = Intent(
+                        Intent.ACTION_VIEW,
+                        "https://github.com/dev-Alok-Kumar-android".toUri()
+                    )
                     context.startActivity(githubIntent)
                 }
             ) {
@@ -148,8 +155,9 @@ fun AboutScreen(
             Spacer(Modifier.height(100.dp))
 
             // 🧾 Footer
-            Text("Version $version", style = MaterialTheme.typography.bodySmall)
-            Text("© 2025 Tic Tac Toe Game", style = MaterialTheme.typography.bodySmall)
+            Text("Version v$version", style = MaterialTheme.typography.bodySmall)
+            Text("© $year Tic Tac Toe Game", style = MaterialTheme.typography.bodySmall)
+            Text("Licensed under MIT", style = MaterialTheme.typography.bodySmall)
             Text("Developed by Alok Kumar", style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(12.dp))
         }
