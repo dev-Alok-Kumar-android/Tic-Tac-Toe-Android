@@ -35,7 +35,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
-import com.tuto.alokkumar.tictactoe.data.GameState
 import com.tuto.alokkumar.tictactoe.data.PreferencesManager
 import com.tuto.alokkumar.tictactoe.ui.components.GameBoard
 import com.tuto.alokkumar.tictactoe.ui.components.GameInfoSection
