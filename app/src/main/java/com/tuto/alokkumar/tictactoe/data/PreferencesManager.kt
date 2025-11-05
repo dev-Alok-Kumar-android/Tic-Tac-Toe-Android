@@ -23,12 +23,12 @@ class PreferencesManager(private val context: Context) {
     }
 
     val gameModeFlow = context.dataStore.data.map { prefs ->
-        val modeName = prefs[KEY_GAME_MODE] ?: GameMode.EASY.name
+        val modeName = prefs[KEY_GAME_MODE] ?: GameMode.HARD.name
         GameMode.valueOf(modeName)
     }
 
     val immersiveFlow = context.dataStore.data.map { prefs ->
-        prefs[IMMERSIVE_MODE] ?: true
+        prefs[IMMERSIVE_MODE] ?: false
     }
 
     val bgmEnabledFlow = context.dataStore.data.map { prefs ->
@@ -40,7 +40,7 @@ class PreferencesManager(private val context: Context) {
     }
 
     val themeDarkFlow = context.dataStore.data.map { prefs ->
-        prefs[KEY_THEME] ?: false
+        prefs[KEY_THEME] ?: true
     }
 
     suspend fun setGameMode(mode: GameMode) {
@@ -97,12 +97,21 @@ class PreferencesManager(private val context: Context) {
         prefs[KEY_HISTORY]?.let { Json.decodeFromString<List<GameHistory>>(it) } ?: emptyList()
     }
 
+    suspend fun removeGameHistory(history: GameHistory) {
+        val currentList = getGameHistoryListOnce().toMutableList()
+        currentList.remove(history)
+        val json = Json.encodeToString(currentList)
+        context.dataStore.edit { prefs ->
+            prefs[KEY_HISTORY] = json
+        }
+    }
+
     private suspend fun getGameHistoryListOnce(): List<GameHistory> {
         val prefs = context.dataStore.data.map { it[KEY_HISTORY] }.first()
         return prefs?.let { Json.decodeFromString(it) } ?: emptyList()
     }
 
-    suspend fun clearGameHistory() {
+    suspend fun clearAllGameHistory() {
         context.dataStore.edit { it.remove(KEY_HISTORY) }
     }
 }

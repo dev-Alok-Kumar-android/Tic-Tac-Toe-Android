@@ -98,7 +98,7 @@ fun SettingsScreen(
             SwitchSetting(
                 checked = isImmersiveMode,
                 onCheckedChange = { viewModel.toggleImmersiveMode() },
-                text = "Immersive Mode",
+                text = "FullScreen Mode",
                 modifier = Modifier.fillMaxWidth()
             )
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)

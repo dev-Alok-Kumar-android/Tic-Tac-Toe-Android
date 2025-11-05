@@ -23,6 +23,14 @@ class GameLogic(
 
     fun getBoard(): List<Char?> = board.toList()
 
+    fun setBoard(newBoard: List<Char?>, current: Char) {
+        for (i in board.indices) {
+            board[i] = newBoard[i]
+        }
+        currentPlayer = current
+        winner = null
+    }
+
     fun makeMove(index: Int): Boolean {
         if (index !in 0..8 || board[index] != null || winner != null) return false
         board[index] = currentPlayer

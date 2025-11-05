@@ -33,7 +33,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
+import com.tuto.alokkumar.tictactoe.data.GameState
 import com.tuto.alokkumar.tictactoe.data.PreferencesManager
 import com.tuto.alokkumar.tictactoe.ui.components.GameBoard
 import com.tuto.alokkumar.tictactoe.ui.components.GameInfoSection
@@ -45,10 +47,11 @@ import com.tuto.alokkumar.tictactoe.viewModel.GameViewModelFactory
 fun GameScreen(
     modifier: Modifier = Modifier,
     mode: GameMode = GameMode.PVP,
+    loadHistory: GameHistory? = null,
     onHome: () -> Unit = {},
     onSettings: () -> Unit = {},
     viewModel: GameViewModel = viewModel(
-        factory = GameViewModelFactory(mode)
+        factory = GameViewModelFactory(mode, loadHistory)
     )
 ) {
     val context = LocalContext.current

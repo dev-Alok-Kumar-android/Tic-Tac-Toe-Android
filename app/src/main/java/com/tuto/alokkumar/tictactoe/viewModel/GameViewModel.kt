@@ -16,7 +16,8 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 class GameViewModel(
-    private val gameMode: GameMode = GameMode.PVP
+    private val gameMode: GameMode = GameMode.PVP,
+    loadHistory: GameHistory? = null
 ) : ViewModel() {
 
     private val logic = GameLogic(gameMode)
@@ -35,7 +36,13 @@ class GameViewModel(
     }
 
     init {
-        updateState()
+        if (loadHistory != null) {
+            _state.value = loadHistory.state
+            logic.gameMode = loadHistory.mode
+            logic.setBoard(loadHistory.state.board, loadHistory.state.currentPlayer)
+        } else {
+            updateState()
+        }
     }
 
     fun onCellClicked(index: Int) {
@@ -123,11 +130,12 @@ class GameViewModel(
 
 
 class GameViewModelFactory(
-    private val mode: GameMode
+    private val mode: GameMode,
+    private val loadHistory: GameHistory? = null
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(GameViewModel::class.java)) {
-            return GameViewModel(mode) as T
+            return GameViewModel(mode, loadHistory) as T  // warning here: Unchecked cast of 'GameViewModel' to 'T (of fun <T : ViewModel> create)'.
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
