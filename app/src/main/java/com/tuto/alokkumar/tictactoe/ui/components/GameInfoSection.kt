@@ -31,7 +31,7 @@ fun GameInfoSection(
         }
         AnimatedVisibility(visible = winner != null) {
             Text(
-                text = if (winner == 'D') "It's a Draw!" else "Winner: $winner 🎉",
+                text = if (winner == 'D') "It's a Draw!" else "Winner: ${winner?: "🧐"} 🎉",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary
             )
