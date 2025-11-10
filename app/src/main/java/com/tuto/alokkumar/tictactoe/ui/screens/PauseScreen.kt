@@ -5,11 +5,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,91 +36,103 @@ fun PauseScreen(
     onRestart: () -> Unit,
     onHome: () -> Unit,
     onSettings: () -> Unit = {},
-    visible: Boolean = true
+    visible: Boolean = true,
 ) {
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn() + scaleIn()
     ) {
-        Box(
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly,
             modifier = modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.9f)),
-            contentAlignment = Alignment.Center
+                .background(MaterialTheme.colorScheme.background)
+                .padding(24.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(40.dp),
-                modifier = Modifier.padding(24.dp)
+            Text(
+                text = "Paused",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            IconButton(
+                onClick = onPlay,
+                modifier = Modifier.size(180.dp)
             ) {
-                Text(
-                    text = "Paused",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = "Resume Game",
+                    modifier = Modifier.size(160.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 IconButton(
-                    onClick = onPlay,
-                    modifier = Modifier.size(180.dp)
+                    onClick = onRestart,
+                    modifier = Modifier.size(80.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Resume Game",
-                        modifier = Modifier.size(160.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Restart",
+                        modifier = Modifier.size(60.dp),
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                IconButton(
+                    onClick = onHome,
+                    modifier = Modifier.size(80.dp)
                 ) {
-                    IconButton(
-                        onClick = onRestart,
-                        modifier = Modifier.size(80.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Restart",
-                            modifier = Modifier.size(60.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Home",
+                        modifier = Modifier.size(60.dp),
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
 
-                    IconButton(
-                        onClick = onHome,
-                        modifier = Modifier.size(80.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Home",
-                            modifier = Modifier.size(60.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-
-                    IconButton(
-                        onClick = onSettings,
-                        modifier = Modifier.size(80.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            modifier = Modifier.size(60.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                IconButton(
+                    onClick = onSettings,
+                    modifier = Modifier.size(80.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        modifier = Modifier.size(60.dp),
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
         }
     }
 }
 
+@Preview(showBackground = true, widthDp = 700, heightDp = 400)
+@Composable
+private fun PauseScreenLandscapePreview() {
+    MaterialTheme {
+        Surface {
+            PauseScreen(
+                onPlay = {},
+                onRestart = {},
+                onHome = {},
+                onSettings = {}
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-private fun PauseScreenPreview() {
+private fun PauseScreenPortraitPreview() {
     MaterialTheme {
         Surface {
             PauseScreen(

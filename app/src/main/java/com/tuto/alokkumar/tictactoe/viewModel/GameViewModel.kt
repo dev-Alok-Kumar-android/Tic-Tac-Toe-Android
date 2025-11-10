@@ -24,6 +24,9 @@ class GameViewModel(
 
     private val _state = MutableStateFlow(GameState())
     val state = _state.asStateFlow()
+    private val scope = this.viewModelScope
+    private val _isAiThinking = MutableStateFlow(false)
+    val isAiThinking = _isAiThinking.asStateFlow()
 
     private var isPaused = false
 
@@ -47,6 +50,8 @@ class GameViewModel(
 
     fun onCellClicked(index: Int) {
         val current = _state.value
+        if (_isAiThinking.value || isPaused) return
+
         if (current.winner != null || current.board[index] != null) return
 
         if (logic.makeMove(index)) Sound.play("move")
@@ -54,11 +59,12 @@ class GameViewModel(
 
         checkAndHandleResult()
 
-        // AI plays after human (for AI modes)
         if (logic.winner == null && gameMode != GameMode.PVP && logic.currentPlayer == 'O') {
-            viewModelScope.launch {
+            scope.launch {
+                _isAiThinking.value = true
                 delay(400L)
                 aiMove()
+                _isAiThinking.value = false
             }
         }
     }
@@ -106,7 +112,7 @@ class GameViewModel(
     }
 
     fun saveHistory(prefs: PreferencesManager){
-        viewModelScope.launch {
+        scope.launch {
             prefs.addGameHistory(
                 GameHistory(
                     dateMillis = Date().time,
@@ -133,9 +139,10 @@ class GameViewModelFactory(
     private val mode: GameMode,
     private val loadHistory: GameHistory? = null
 ) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(GameViewModel::class.java)) {
-            return GameViewModel(mode, loadHistory) as T  // warning here: Unchecked cast of 'GameViewModel' to 'T (of fun <T : ViewModel> create)'.
+            return GameViewModel(mode, loadHistory) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

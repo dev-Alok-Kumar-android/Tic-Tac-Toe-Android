@@ -2,7 +2,6 @@ package com.tuto.alokkumar.tictactoe.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
@@ -51,10 +49,11 @@ fun GameScreen(
     onSettings: () -> Unit = {},
     viewModel: GameViewModel = viewModel(
         factory = GameViewModelFactory(mode, loadHistory)
-    )
+    ),
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsState()
+    val isAiThinking by viewModel.isAiThinking.collectAsState()
     var isPaused by remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val prefs = remember { PreferencesManager(context) }
@@ -78,10 +77,12 @@ fun GameScreen(
                     isPaused = true
                     viewModel.pauseGame()
                 }
+
                 Lifecycle.Event.ON_RESUME -> {
                     // Resume only if user didn’t manually pause
                     if (!isPaused) viewModel.resumeGame()
                 }
+
                 else -> Unit
             }
         }
@@ -143,25 +144,33 @@ fun GameScreen(
             } else {
                 if (isLandscape) {
                     Row(
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        GameInfoSection(
-                            currentPlayer = state.currentPlayer,
-                            winner = state.winner,
-                            onRestart = viewModel::restartGame
-                        )
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.horizontalScroll(rememberScrollState())
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             ScoreBoard(
                                 xWins = state.xWins,
                                 oWins = state.oWins,
                                 draws = state.draws
                             )
+                            GameInfoSection(
+                                currentPlayer = state.currentPlayer,
+                                winner = state.winner,
+                                isAiThinking = isAiThinking,
+                                onRestart = viewModel::restartGame
+                            )
+                        }
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             GameBoard(
                                 board = state.board,
                                 onCellClick = viewModel::onCellClicked
@@ -183,6 +192,7 @@ fun GameScreen(
                         GameInfoSection(
                             currentPlayer = state.currentPlayer,
                             winner = state.winner,
+                            isAiThinking = isAiThinking,
                             onRestart = viewModel::restartGame
                         )
                         GameBoard(

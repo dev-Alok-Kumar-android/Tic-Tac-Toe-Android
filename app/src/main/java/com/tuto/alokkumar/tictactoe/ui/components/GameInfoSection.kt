@@ -3,6 +3,7 @@ package com.tuto.alokkumar.tictactoe.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,10 +17,12 @@ import androidx.compose.ui.unit.dp
 fun GameInfoSection(
     currentPlayer: Char,
     winner: Char?,
+    isAiThinking: Boolean,
     modifier: Modifier = Modifier,
     onRestart: () -> Unit
 ) {
     Column(
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -43,5 +46,16 @@ fun GameInfoSection(
         ) {
             Text("Restart", style = MaterialTheme.typography.bodyLarge)
         }
+
+
+        AnimatedVisibility(isAiThinking) {
+            Text(
+                "Thinking...",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(12.dp)
+            )
+        }
+
     }
 }
