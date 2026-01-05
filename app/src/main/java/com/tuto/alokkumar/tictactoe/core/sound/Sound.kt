@@ -1,4 +1,4 @@
-package com.tuto.alokkumar.tictactoe.data
+package com.tuto.alokkumar.tictactoe.core.sound
 
 import android.content.Context
 
@@ -10,6 +10,8 @@ object Sound {
     fun playBgm(context: Context) = manager.playBgm(context)
 
     fun stopBgm() = manager.stopBgm()
+
+    fun pauseBgm() = manager.pauseBgm()
 
     fun play(name: String) = manager.playSound(name)
 

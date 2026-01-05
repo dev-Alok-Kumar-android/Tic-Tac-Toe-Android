@@ -3,9 +3,7 @@ package com.tuto.alokkumar.tictactoe
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,10 +17,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.tuto.alokkumar.tictactoe.core.pref.Preferences
+import com.tuto.alokkumar.tictactoe.core.sound.Sound
+import com.tuto.alokkumar.tictactoe.data.AppTheme
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
-import com.tuto.alokkumar.tictactoe.data.PreferencesManager
-import com.tuto.alokkumar.tictactoe.data.Sound
 import com.tuto.alokkumar.tictactoe.ui.components.ImmersiveMode
 import com.tuto.alokkumar.tictactoe.ui.screens.AboutScreen
 import com.tuto.alokkumar.tictactoe.ui.screens.GameScreen
@@ -34,25 +33,19 @@ import com.tuto.alokkumar.tictactoe.viewModel.GameViewModel
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModelFactory
 import kotlinx.coroutines.launch
 
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val prefs = remember { PreferencesManager(context) }
-    val isBgmEnabled by prefs.bgmEnabledFlow.collectAsState(initial = false)
-    val mode by prefs.gameModeFlow.collectAsState(initial = GameMode.PVP)
-    val isSoundEnabled by prefs.soundEnabledFlow.collectAsState(initial = false)
-    val isImmersiveMode by prefs.immersiveFlow.collectAsState(initial = false)
-    val isDarkTheme by prefs.themeDarkFlow.collectAsState(initial = false)
-    val histories by prefs.getGameHistoryFlow().collectAsState(initial = emptyList())
-    var selectedHistory: GameHistory? by remember { mutableStateOf(null ) }
-
-    DisposableEffect(Unit) {
-        Sound.init(context)
-        onDispose { Sound.release() }
-    }
+    val isBgmEnabled by Preferences.bgmEnabledFlow.collectAsState(initial = false)
+    val mode by Preferences.gameModeFlow.collectAsState(initial = GameMode.PVP)
+    val isSoundEnabled by Preferences.soundEnabledFlow.collectAsState(initial = false)
+    val isImmersiveMode by Preferences.immersiveFlow.collectAsState(initial = false)
+    val theme by Preferences.themeFlow.collectAsState(initial = AppTheme.SYSTEM)
+    val dynamicColor by Preferences.dynamicColorFlow.collectAsState(initial = false)
+    val histories by Preferences.getGameHistoryFlow().collectAsState(initial = emptyList())
+    var selectedHistory: GameHistory? by remember { mutableStateOf(null) }
 
     Sound.setBgmEnabled(isBgmEnabled)
     Sound.setSoundEnabled(isSoundEnabled)
@@ -64,9 +57,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
     }
 
-    ImmersiveMode(isImmersiveMode)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) ImmersiveMode(isImmersiveMode)
 
-    TicTacToeTheme(darkTheme = isDarkTheme) {
+    TicTacToeTheme(appTheme = theme, dynamicColor = dynamicColor) {
         NavHost(navController, startDestination = "menu") {
 
             composable("menu") {
@@ -127,18 +120,19 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             composable("history") {
                 val scope = rememberCoroutineScope()
-                HistoryScreen(histories, onClear = { scope.launch { prefs.clearAllGameHistory() } },
+                HistoryScreen(
+                    histories,
+                    onClear = { scope.launch { Preferences.clearAllGameHistory() } },
                     onItemClick = {
-                        selectedHistory  = it
+                        selectedHistory = it
                         navController.navigate("game/restore")
 
-                },
+                    },
                     onItemClear = {
                         scope.launch {
-                            prefs.removeGameHistory(it)
+                            Preferences.removeGameHistory(it)
                         }
-                    }
-                )
+                    })
             }
 
             composable("settings") {

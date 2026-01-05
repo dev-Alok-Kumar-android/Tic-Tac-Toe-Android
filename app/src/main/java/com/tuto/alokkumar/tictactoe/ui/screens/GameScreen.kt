@@ -1,9 +1,7 @@
 package com.tuto.alokkumar.tictactoe.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,19 +10,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -33,13 +32,14 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
-import com.tuto.alokkumar.tictactoe.data.PreferencesManager
 import com.tuto.alokkumar.tictactoe.ui.components.GameBoard
 import com.tuto.alokkumar.tictactoe.ui.components.GameInfoSection
+import com.tuto.alokkumar.tictactoe.ui.components.PauseScreen
 import com.tuto.alokkumar.tictactoe.ui.components.ScoreBoard
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModel
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModelFactory
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(
     modifier: Modifier = Modifier,
@@ -51,21 +51,17 @@ fun GameScreen(
         factory = GameViewModelFactory(mode, loadHistory)
     ),
 ) {
-    val context = LocalContext.current
     val state by viewModel.state.collectAsState()
     val isAiThinking by viewModel.isAiThinking.collectAsState()
-    var isPaused by remember { mutableStateOf(false) }
+    val isPaused by viewModel.isPaused.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val prefs = remember { PreferencesManager(context) }
 
     // 🔙 Handle back press
     BackHandler(enabled = true) {
         if (!isPaused) {
-            isPaused = true
             viewModel.pauseGame()
         } else {
-            isPaused = false
-            viewModel.pauseGame()
+            viewModel.resumeGame()
         }
     }
 
@@ -74,13 +70,11 @@ fun GameScreen(
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_STOP -> {
-                    isPaused = true
                     viewModel.pauseGame()
                 }
 
                 Lifecycle.Event.ON_RESUME -> {
-                    // Resume only if user didn’t manually pause
-                    if (!isPaused) viewModel.resumeGame()
+                    viewModel.resumeGame()
                 }
 
                 else -> Unit
@@ -92,52 +86,50 @@ fun GameScreen(
         }
     }
 
-    // 🎨 UI Layout
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            IconButton(onClick = {
-                isPaused = true
-                viewModel.pauseGame()
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Pause",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Tic Tac Toe") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        if (!isPaused) {
+                            viewModel.pauseGame()
+                        } else {
+                            viewModel.resumeGame()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Menu,
+                            contentDescription = if (isPaused) "Resume" else "Pause",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            )
         }
-
-        BoxWithConstraints(contentAlignment = Alignment.Center) {
+    ) {
+        BoxWithConstraints(
+            contentAlignment = Alignment.Center,
+            modifier = modifier
+                .fillMaxSize()
+                .padding(it)
+        ) {
             val isLandscape = maxWidth > maxHeight
             if (isPaused) {
                 PauseScreen(
                     visible = true,
                     onPlay = {
-                        isPaused = false
                         viewModel.resumeGame()
                     },
                     onRestart = {
-                        isPaused = false
                         viewModel.restartGame()
                     },
                     onHome = {
-                        isPaused = false
-                        viewModel.saveHistory(prefs)
+                        viewModel.saveHistory()
                         onHome()
                     },
                     onSettings = {
-                        isPaused = false
-                        viewModel.saveHistory(prefs)
+                        viewModel.saveHistory()
                         onSettings()
                     }
                 )

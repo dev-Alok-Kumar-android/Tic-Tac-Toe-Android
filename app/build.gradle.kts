@@ -11,10 +11,10 @@ android {
 
     defaultConfig {
         applicationId = "com.tuto.alokkumar.tictactoe"
-        minSdk = 29
+        minSdk = 21
         targetSdk = 36
         versionCode = 2
-        versionName = "2.1.0"
+        versionName = "2.1.1"
     }
 
     buildTypes {

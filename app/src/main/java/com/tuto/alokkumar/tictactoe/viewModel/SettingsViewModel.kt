@@ -2,60 +2,72 @@ package com.tuto.alokkumar.tictactoe.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tuto.alokkumar.tictactoe.core.pref.Preferences
+import com.tuto.alokkumar.tictactoe.data.AppTheme
 import com.tuto.alokkumar.tictactoe.data.GameMode
-import com.tuto.alokkumar.tictactoe.data.PreferencesManager
+import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class SettingsViewModel(private val prefs: PreferencesManager) : ViewModel() {
+class SettingsViewModel() : ViewModel() {
 
-    val selectedGameMode = prefs.gameModeFlow.stateIn(
+    val selectedGameMode = Preferences.gameModeFlow.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), GameMode.EASY
     )
 
+    val theme = Preferences.themeFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), AppTheme.SYSTEM
+    )
+
     val immersiveMode =
-        prefs.immersiveFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+        Preferences.immersiveFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
-    val bgmEnabled = prefs.bgmEnabledFlow.stateIn(
+    val bgmEnabled = Preferences.bgmEnabledFlow.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), true
     )
 
-    val soundEnabled = prefs.soundEnabledFlow.stateIn(
+    val soundEnabled = Preferences.soundEnabledFlow.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), true
     )
 
-    val themeDark = prefs.themeDarkFlow.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), false
+    val dynamicColor = Preferences.dynamicColorFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), true
     )
 
     fun setGameMode(mode: GameMode) {
         viewModelScope.launch {
-            prefs.setGameMode(mode)
+            Preferences.setGameMode(mode)
         }
     }
 
     fun toggleImmersiveMode() {
         viewModelScope.launch {
-            prefs.toggleImmersiveMode()
+            Preferences.toggleImmersiveMode()
+        }
+    }
+
+    fun toggleDynamicColor() {
+        viewModelScope.launch {
+            Preferences.toggleDynamicColor()
         }
     }
 
     fun toggleBgm() {
         viewModelScope.launch {
-            prefs.toggleBgm()
+            Preferences.toggleBgm()
         }
     }
 
     fun toggleSound() {
         viewModelScope.launch {
-            prefs.toggleSound()
+            Preferences.toggleSound()
         }
     }
 
-    fun toggleTheme() {
+    fun setTheme(theme: AppTheme) {
         viewModelScope.launch {
-            prefs.toggleDarkTheme()
+            Preferences.setTheme(theme)
         }
     }
 }

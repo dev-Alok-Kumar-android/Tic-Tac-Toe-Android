@@ -3,11 +3,11 @@ package com.tuto.alokkumar.tictactoe.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.tuto.alokkumar.tictactoe.core.pref.Preferences
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.data.GameState
-import com.tuto.alokkumar.tictactoe.data.PreferencesManager
-import com.tuto.alokkumar.tictactoe.data.Sound
+import com.tuto.alokkumar.tictactoe.core.sound.Sound
 import com.tuto.alokkumar.tictactoe.domain.GameLogic
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,15 +27,19 @@ class GameViewModel(
     private val scope = this.viewModelScope
     private val _isAiThinking = MutableStateFlow(false)
     val isAiThinking = _isAiThinking.asStateFlow()
-
-    private var isPaused = false
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused = _isPaused.asStateFlow()
 
     fun pauseGame() {
-        isPaused = true
+        _isPaused.value = true
     }
 
     fun resumeGame() {
-        isPaused = false
+        _isPaused.value = false
+    }
+
+    fun togglePaused() {
+        _isPaused.value = !_isPaused.value
     }
 
     init {
@@ -50,7 +54,7 @@ class GameViewModel(
 
     fun onCellClicked(index: Int) {
         val current = _state.value
-        if (_isAiThinking.value || isPaused) return
+        if (_isAiThinking.value || _isPaused.value) return
 
         if (current.winner != null || current.board[index] != null) return
 
@@ -111,9 +115,9 @@ class GameViewModel(
         updateState()
     }
 
-    fun saveHistory(prefs: PreferencesManager){
+    fun saveHistory() {
         scope.launch {
-            prefs.addGameHistory(
+            Preferences.addGameHistory(
                 GameHistory(
                     dateMillis = Date().time,
                     mode = gameMode,

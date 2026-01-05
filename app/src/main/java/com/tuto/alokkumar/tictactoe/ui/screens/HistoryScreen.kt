@@ -38,17 +38,14 @@ fun HistoryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Game History") },
-                actions = {
-                    if (histories.isNotEmpty()) {
-                        TextButton(onClick = onClear) {
-                            Text("Clear All", color = MaterialTheme.colorScheme.error)
-                        }
+            TopAppBar(title = { Text("Game History") }, actions = {
+                if (histories.isNotEmpty()) {
+                    TextButton(onClick = onClear) {
+                        Text("Clear All", color = MaterialTheme.colorScheme.error)
                     }
-                })
-        }
-    ) { inner ->
+                }
+            })
+        }) { inner ->
 
         if (showDialog.value.first) {
             AlertDialog(
@@ -57,7 +54,7 @@ fun HistoryScreen(
                 text = { Text("Are you sure you want to clear the history?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        onItemClear(showDialog.value.second?: return@TextButton)
+                        onItemClear(showDialog.value.second ?: return@TextButton)
                         showDialog.value = Pair(false, null)
                     }) {
                         Text("Yes", color = MaterialTheme.colorScheme.error)
@@ -65,8 +62,7 @@ fun HistoryScreen(
                     TextButton(onClick = { showDialog.value = Pair(false, null) }) {
                         Text("No", color = MaterialTheme.colorScheme.onSurface)
                     }
-                }
-            )
+                })
         }
 
         if (histories.isEmpty()) {
@@ -87,12 +83,12 @@ fun HistoryScreen(
             ) {
                 items(histories) { item ->
                     HistoryItem(
-                        item, modifier = Modifier
+                        item,
+                        modifier = Modifier
                             .fillMaxWidth()
                             .combinedClickable(
                                 onClick = { onItemClick(item) },
-                                onLongClick = { showDialog.value = Pair(true, item) }
-                            )
+                                onLongClick = { showDialog.value = Pair(true, item) })
                     )
                     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                 }

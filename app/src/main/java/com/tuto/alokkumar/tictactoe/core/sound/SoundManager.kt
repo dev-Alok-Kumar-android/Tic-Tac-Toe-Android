@@ -1,4 +1,4 @@
-package com.tuto.alokkumar.tictactoe.data
+package com.tuto.alokkumar.tictactoe.core.sound
 
 import android.content.Context
 import android.media.MediaPlayer
@@ -17,11 +17,22 @@ class SoundManager(
 
 
     fun init(context: Context) {
+        if (soundPool != null) return
+
         soundPool = SoundPool.Builder().setMaxStreams(5).build()
-        soundMap["move"] = soundPool?.load(context.applicationContext, R.raw.pop, 1) ?: 0
-        soundMap["win"] = soundPool?.load(context.applicationContext, R.raw.game_success_alert, 1) ?: 0
-        soundMap["lose"] = soundPool?.load(context.applicationContext, R.raw.over, 1) ?: 0
-        soundMap["draw"] = soundPool?.load(context.applicationContext, R.raw.tf_notification, 1) ?: 0
+
+        soundPool?.setOnLoadCompleteListener { _, sampleId, status ->
+            if (status == 0) {
+                Log.d("SoundManager", "Sound loaded: $sampleId")
+            } else {
+                Log.e("SoundManager", "Failed to load sound: $sampleId")
+            }
+        }
+
+        soundMap["move"] = soundPool?.load(context, R.raw.pop, 1) ?: 0
+        soundMap["win"] = soundPool?.load(context, R.raw.game_success_alert, 1) ?: 0
+        soundMap["lose"] = soundPool?.load(context, R.raw.over, 1) ?: 0
+        soundMap["draw"] = soundPool?.load(context, R.raw.tf_notification, 1) ?: 0
     }
 
     // 🎵 Background music
@@ -35,6 +46,12 @@ class SoundManager(
     }
 
     fun stopBgm() {
+        bgmPlayer?.stop()
+        bgmPlayer?.release()
+        bgmPlayer = null
+    }
+
+    fun pauseBgm() {
         bgmPlayer?.pause()
     }
 

@@ -36,7 +36,7 @@ fun AboutScreen(
 ) {
     val context = LocalContext.current
     val scroll = rememberScrollState()
-    val year = java.time.Year.now().value
+    val year = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
     val version = LocalContext.current.packageManager.getPackageInfo(
         LocalContext.current.packageName,
         0
