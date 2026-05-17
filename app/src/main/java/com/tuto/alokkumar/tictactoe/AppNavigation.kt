@@ -25,6 +25,7 @@ import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.ui.components.ImmersiveMode
 import com.tuto.alokkumar.tictactoe.ui.screens.AboutScreen
 import com.tuto.alokkumar.tictactoe.ui.screens.GameScreen
+import com.tuto.alokkumar.tictactoe.ui.screens.GameScreen3D
 import com.tuto.alokkumar.tictactoe.ui.screens.HistoryScreen
 import com.tuto.alokkumar.tictactoe.ui.screens.MenuScreen
 import com.tuto.alokkumar.tictactoe.ui.screens.SettingsScreen
@@ -65,6 +66,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             composable("menu") {
                 MenuScreen(
                     onStartGame = { navController.navigate("game/${mode.name}") },
+                    onStartGame3D = { navController.navigate("game_3d") },
                     onViewStats = { navController.navigate("history") },
                     onExit = { activity?.finish() },
                     onPvpMode = { navController.navigate("game/${GameMode.PVP.name}") },
@@ -142,6 +144,21 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             composable("about") {
                 AboutScreen(onBack = { navController.popBackStack() })
+            }
+
+            // Experimental 3d
+            composable("game_3d") {
+                GameScreen3D(
+                    onHome = {
+                        navController.navigate("menu") {
+                            popUpTo("menu") { inclusive = true }
+                        }
+                    },
+                    onSettings = { navController.navigate("settings") },
+                    modifier = modifier,
+                    difficulty = GameMode.MEDIUM,
+                    viewModel = viewModel()
+                )
             }
 
         }

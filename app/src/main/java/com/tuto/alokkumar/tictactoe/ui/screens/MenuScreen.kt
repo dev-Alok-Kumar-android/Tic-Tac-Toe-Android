@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun MenuScreen(
     onStartGame: () -> Unit,
+    onStartGame3D: () -> Unit,
     onViewStats: () -> Unit,
     onExit: () -> Unit,
     onAbout: () -> Unit = {},
@@ -110,8 +111,14 @@ fun MenuScreen(
                 Text("START", color = MaterialTheme.colorScheme.primary, fontSize = 28.sp)
             }
 
-            TextButton(onClick = onPvpMode) {
-                Text("PVP", color = MaterialTheme.colorScheme.primary, fontSize = 18.sp)
+            Row {
+                TextButton(onClick = onPvpMode) {
+                    Text("PVP", color = MaterialTheme.colorScheme.primary, fontSize = 18.sp)
+                }
+
+                TextButton(onClick = onStartGame3D) {
+                    Text("3D", color = MaterialTheme.colorScheme.primary, fontSize = 18.sp)
+                }
             }
         }
 
@@ -147,6 +154,7 @@ fun MenuScreen(
 private fun MenuPrev() {
     MenuScreen(
         onStartGame = {},
+        onStartGame3D = {},
         onViewStats = {},
         onExit = {},
         onAbout = {},
