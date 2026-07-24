@@ -46,9 +46,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Restore music if the user has BGM enabled in settings
-        if (Sound.manager.isBgmEnabled) {
-            Sound.playBgm(this)
-        }
+        // Management moved to AppNavigation for lifecycle synchronization
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Clean up audio resources
+        Sound.release()
     }
 }

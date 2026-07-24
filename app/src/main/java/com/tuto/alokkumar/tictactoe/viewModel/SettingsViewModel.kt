@@ -18,11 +18,11 @@ import kotlinx.coroutines.launch
  * Exposes observable [kotlinx.coroutines.flow.StateFlow]s mapped directly from DataStore flows
  * using [stateIn] for reactive UI consumption. Handles validation for complex types like [BoardSize].
  */
-class SettingsViewModel() : ViewModel() {
+class SettingsViewModel : ViewModel() {
 
-    /** Current difficulty setting for AI matches. Defaults to [GameMode.EASY]. */
+    /** Current difficulty setting for AI matches. Defaults to [GameMode.HARD]. */
     val selectedGameMode = Preferences.gameModeFlow.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), GameMode.EASY
+        viewModelScope, SharingStarted.WhileSubscribed(5000), GameMode.HARD
     )
 
     /** Configured dimensions for 2D/3D boards. */
@@ -37,7 +37,7 @@ class SettingsViewModel() : ViewModel() {
 
     /** Flag for fullscreen immersive layout behavior. */
     val immersiveMode =
-        Preferences.immersiveFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+        Preferences.immersiveFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     /** Flag indicating if background music should play. */
     val bgmEnabled = Preferences.bgmEnabledFlow.stateIn(
@@ -61,7 +61,7 @@ class SettingsViewModel() : ViewModel() {
 
     /** Visual render style of the grid (Classic or 3D Layered). */
     val boardStyle = Preferences.boardStyleFlow.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), BoardStyle.CLASSIC
+        viewModelScope, SharingStarted.WhileSubscribed(5000), BoardStyle.LAYERED_3D
     )
 
     /** Configured device screen orientation. */
@@ -76,22 +76,15 @@ class SettingsViewModel() : ViewModel() {
         }
     }
 
-    /**
-     * Persists board dimensions.
-     * Includes sanity checks to ensure winCondition is achievable within provided bounds.
-     */
     fun setBoardSize(size: BoardSize) {
         viewModelScope.launch {
-            // Validate winCondition: can't be more than max(x, y, z)
-            val maxDimension = maxOf(size.x, size.y, size.z)
-            val validatedSize = if (size.winCondition > maxDimension) {
-                size.copy(winCondition = maxDimension)
-            } else if (size.winCondition < 3) {
-                size.copy(winCondition = 3)
-            } else {
-                size
-            }
-            Preferences.setBoardSize(validatedSize)
+            val maxDim = maxOf(size.x, size.y, size.z)
+            // Fix: ensure min of coerceIn is not greater than max (maxDim)
+            val minWinCondition = minOf(3, maxDim)
+            val clampedWinCondition = size.winCondition.coerceIn(minWinCondition, maxDim)
+            val finalSize = size.copy(winCondition = clampedWinCondition)
+            
+            Preferences.setBoardSize(finalSize)
         }
     }
 

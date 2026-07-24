@@ -1,6 +1,7 @@
 package com.tuto.alokkumar.tictactoe.core.sound
 
 import android.content.Context
+import android.media.SoundPool
 
 /**
  * Singleton wrapper around [SoundManager] providing convenient app-wide sound triggers.

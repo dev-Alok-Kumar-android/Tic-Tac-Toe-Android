@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -61,6 +62,7 @@ fun PauseScreen(
             contentAlignment = Alignment.Center
         ) {
             val isLandscape = maxWidth > maxHeight
+            val compactMode = maxHeight < 400.dp
 
             if (isLandscape) {
                 // --- LANDSCAPE LAYOUT ---
@@ -69,46 +71,51 @@ fun PauseScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(32.dp)
+                        .padding(if (compactMode) 16.dp else 32.dp)
                 ) {
                     // Left section - Options
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(32.dp),
-                        modifier = Modifier.weight(1f)
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
                     ) {
+                        val sideIconSize = if (compactMode) 64.dp else 80.dp
+                        val sideInnerIconSize = if (compactMode) 40.dp else 56.dp
+
                         IconButton(
                             onClick = onRestart,
-                            modifier = Modifier.size(70.dp)
+                            modifier = Modifier.size(sideIconSize)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = "Restart",
-                                modifier = Modifier.size(50.dp),
+                                modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
 
                         IconButton(
                             onClick = onHome,
-                            modifier = Modifier.size(80.dp)
+                            modifier = Modifier.size(sideIconSize)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Home,
                                 contentDescription = "Home",
-                                modifier = Modifier.size(60.dp),
+                                modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
 
                         IconButton(
                             onClick = onSettings,
-                            modifier = Modifier.size(70.dp)
+                            modifier = Modifier.size(sideIconSize)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Settings",
-                                modifier = Modifier.size(50.dp),
+                                modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -118,29 +125,33 @@ fun PauseScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .fillMaxHeight()
                     ) {
                         Text(
                             text = "Paused",
-                            style = MaterialTheme.typography.headlineLarge,
+                            style = if (compactMode) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(if (compactMode) 8.dp else 24.dp))
+
+                        val playSize = if (compactMode) 120.dp else 180.dp
+                        val playInnerSize = if (compactMode) 100.dp else 160.dp
 
                         IconButton(
                             onClick = onPlay,
-                            modifier = Modifier.size(160.dp)
+                            modifier = Modifier.size(playSize)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
                                 contentDescription = "Resume Game",
-                                modifier = Modifier.size(140.dp),
+                                modifier = Modifier.size(playInnerSize),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
-
                 }
             } else {
                 // --- PORTRAIT LAYOUT ---
@@ -153,11 +164,9 @@ fun PauseScreen(
                 ) {
                     Text(
                         text = "Paused",
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.displaySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-
-                    Spacer(modifier = Modifier.height(24.dp))
 
                     IconButton(
                         onClick = onPlay,
@@ -175,38 +184,41 @@ fun PauseScreen(
                         horizontalArrangement = Arrangement.spacedBy(24.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val portraitIconSize = 80.dp
+                        val portraitInnerIconSize = 60.dp
+
                         IconButton(
                             onClick = onRestart,
-                            modifier = Modifier.size(80.dp)
+                            modifier = Modifier.size(portraitIconSize)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = "Restart",
-                                modifier = Modifier.size(60.dp),
+                                modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
 
                         IconButton(
                             onClick = onHome,
-                            modifier = Modifier.size(80.dp)
+                            modifier = Modifier.size(portraitIconSize)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Home,
                                 contentDescription = "Home",
-                                modifier = Modifier.size(60.dp),
+                                modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
 
                         IconButton(
                             onClick = onSettings,
-                            modifier = Modifier.size(80.dp)
+                            modifier = Modifier.size(portraitIconSize)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Settings",
-                                modifier = Modifier.size(60.dp),
+                                modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -217,9 +229,9 @@ fun PauseScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 700, heightDp = 400)
+@Preview(showBackground = true, widthDp = 500, heightDp = 300)
 @Composable
-private fun PauseScreenLandscapePreview() {
+private fun PauseScreenLandscapeCompactPreview() {
     MaterialTheme {
         Surface {
             PauseScreen(

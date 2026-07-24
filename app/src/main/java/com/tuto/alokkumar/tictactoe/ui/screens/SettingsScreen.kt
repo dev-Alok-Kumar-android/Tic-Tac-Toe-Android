@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -83,7 +82,8 @@ fun SettingsScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
             })
-        }) { padding ->
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -104,35 +104,39 @@ fun SettingsScreen(
                     label = "Rows",
                     value = boardSize.y,
                     onValueChange = { viewModel.setBoardSize(boardSize.copy(y = it)) },
+                    range = 3..10,
                     modifier = Modifier.weight(1f)
                 )
                 NumberPicker(
                     label = "Cols",
                     value = boardSize.x,
                     onValueChange = { viewModel.setBoardSize(boardSize.copy(x = it)) },
+                    range = 3..10,
                     modifier = Modifier.weight(1f)
                 )
             }
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 NumberPicker(
-                    label = "Layers (3D)",
+                    label = "Layers",
                     value = boardSize.z,
                     onValueChange = { viewModel.setBoardSize(boardSize.copy(z = it)) },
+                    range = 1..10,
                     modifier = Modifier.weight(1f)
                 )
                 NumberPicker(
                     label = "To Win",
                     value = boardSize.winCondition,
                     onValueChange = { viewModel.setBoardSize(boardSize.copy(winCondition = it)) },
+                    range = minOf(3, maxOf(boardSize.x, boardSize.y, boardSize.z))..maxOf(boardSize.x, boardSize.y, boardSize.z),
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+            HorizontalDivider()
 
             SettingSelector(Modifier, "Theme", AppTheme.entries, themeDark) { viewModel.setTheme(it as AppTheme)}
-            SettingSelector(Modifier, "Orientation", listOf("Portrait", "Landscape", "Auto", "System"), "System") { viewModel.setOrientation(it as Orientation) }
+            SettingSelector(Modifier, "Orientation", Orientation.entries, orientation) { viewModel.setOrientation(it as Orientation) }
 
             SwitchSetting(
                 checked = bgmEnabled,
@@ -140,7 +144,7 @@ fun SettingsScreen(
                 text = "Background Music",
                 modifier = Modifier.fillMaxWidth()
             )
-            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+            HorizontalDivider()
 
             SwitchSetting(
                 checked = soundEnabled,
@@ -148,7 +152,7 @@ fun SettingsScreen(
                 text = "Sound Effects",
                 modifier = Modifier.fillMaxWidth()
             )
-            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+            HorizontalDivider()
 
             SwitchSetting(
                 checked = isImmersiveMode,
@@ -156,7 +160,7 @@ fun SettingsScreen(
                 text = "FullScreen Mode",
                 modifier = Modifier.fillMaxWidth()
             )
-            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+            HorizontalDivider()
 
             SwitchSetting(
                 checked = dynamicColor,
@@ -164,7 +168,7 @@ fun SettingsScreen(
                 text = "Dynamic Color",
                 modifier = Modifier.fillMaxWidth()
             )
-            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+            HorizontalDivider()
 
             SwitchSetting(
                 checked = bgAnimationEnabled,
@@ -172,7 +176,7 @@ fun SettingsScreen(
                 text = "Background Animations",
                 modifier = Modifier.fillMaxWidth()
             )
-            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+            HorizontalDivider()
 
             Spacer(modifier = Modifier.height(16.dp))
             Text("Version v$version", style = MaterialTheme.typography.bodySmall)

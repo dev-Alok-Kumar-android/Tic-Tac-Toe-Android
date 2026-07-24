@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -173,30 +174,6 @@ fun GameContent(
                 )
             }
 
-            // Floating Pause Button
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.TopEnd
-            ) {
-                IconButton(
-                    onClick = { if (isPaused) onResume() else onPause() },
-                    modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                            RoundedCornerShape(12.dp)
-                        )
-                ) {
-                    Icon(
-                        imageVector = if (isPaused) Icons.Rounded.PlayArrow else MyIcons.Pause,
-                        contentDescription = if (isPaused) "Resume" else "Pause",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
-
             val isLandscape = maxWidth > maxHeight
             if (isPaused) {
                 PauseScreen(
@@ -314,6 +291,30 @@ fun GameContent(
                     }
                 }
             }
+
+            // Floating Pause Button (Moved to top of Z-order)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    IconButton(
+                        onClick = { if (isPaused) onResume() else onPause() },
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                RoundedCornerShape(12.dp)
+                            )
+                    ) {
+                        Icon(
+                            imageVector = if (isPaused) Icons.Default.PlayArrow else MyIcons.Pause,
+                            contentDescription = if (isPaused) "Resume" else "Pause",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
         }
     }
 }

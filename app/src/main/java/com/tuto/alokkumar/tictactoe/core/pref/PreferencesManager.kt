@@ -49,17 +49,29 @@ class PreferencesManager(private val appContext: Context) {
     // --- FLOWS ---
     /** Emits selected [GameMode]. Defaults to [GameMode.HARD]. */
     val gameModeFlow = appContext.dataStore.data.map { prefs ->
-        GameMode.valueOf(prefs[KEY_GAME_MODE] ?: GameMode.HARD.name)
+        try {
+            GameMode.valueOf(prefs[KEY_GAME_MODE] ?: GameMode.HARD.name)
+        } catch (_: Exception) {
+            GameMode.HARD
+        }
     }
 
     /** Emits configured [BoardSize]. Defaults to 3x3 2D board. */
     val boardSizeFlow = appContext.dataStore.data.map { prefs ->
-        prefs[KEY_BOARD_SIZE]?.let { Json.decodeFromString<BoardSize>(it) } ?: BoardSize()
+        try {
+            prefs[KEY_BOARD_SIZE]?.let { Json.decodeFromString<BoardSize>(it) } ?: BoardSize()
+        } catch (_: Exception) {
+            BoardSize()
+        }
     }
 
     /** Emits application visual [AppTheme]. Defaults to [AppTheme.SYSTEM]. */
     val themeFlow = appContext.dataStore.data.map { prefs ->
-        AppTheme.valueOf(prefs[KEY_THEME] ?: AppTheme.SYSTEM.name)
+        try {
+            AppTheme.valueOf(prefs[KEY_THEME] ?: AppTheme.SYSTEM.name)
+        } catch (_: Exception) {
+            AppTheme.SYSTEM
+        }
     }
 
     /** Emits whether fullscreen immersive mode is enabled. */
@@ -87,14 +99,25 @@ class PreferencesManager(private val appContext: Context) {
         prefs[KEY_BG_ANIMATION] ?: false
     }
 
-    /** Emits selected board rendering [BoardStyle]. Defaults to [BoardStyle.CLASSIC]. */
+    /** Emits selected board rendering [BoardStyle]. Defaults to [BoardStyle.LAYERED_3D]. */
     val boardStyleFlow = appContext.dataStore.data.map { prefs ->
-        BoardStyle.valueOf(prefs[KEY_BOARD_STYLE] ?: BoardStyle.CLASSIC.name)
+        val raw = prefs[KEY_BOARD_STYLE] ?: BoardStyle.LAYERED_3D.name
+        try {
+            BoardStyle.valueOf(raw.uppercase())
+        } catch (_: Exception) {
+            BoardStyle.LAYERED_3D
+        }
     }
 
     /** Emits selected [Orientation]. Defaults to [Orientation.SYSTEM]. */
     val orientationFlow = appContext.dataStore.data.map { prefs ->
-        Orientation.valueOf(prefs[KEY_ORIENTATION] ?: Orientation.SYSTEM.name)
+        val raw = prefs[KEY_ORIENTATION] ?: Orientation.SYSTEM.name
+        try {
+            // Convert to uppercase to match enum constant names (fix for mixed-case legacy data)
+            Orientation.valueOf(raw.uppercase())
+        } catch (_: Exception) {
+            Orientation.SYSTEM
+        }
     }
 
     // --- SETTERS ---

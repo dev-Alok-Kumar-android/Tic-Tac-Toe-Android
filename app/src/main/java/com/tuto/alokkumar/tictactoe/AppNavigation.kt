@@ -5,6 +5,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -14,6 +15,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -53,7 +57,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     val isBgmEnabled by Preferences.bgmEnabledFlow.collectAsState(initial = false)
-    val mode by Preferences.gameModeFlow.collectAsState(initial = GameMode.PVP)
+    val mode by Preferences.gameModeFlow.collectAsState(initial = GameMode.HARD)
     val boardSize by Preferences.boardSizeFlow.collectAsState(initial = BoardSize())
     val isSoundEnabled by Preferences.soundEnabledFlow.collectAsState(initial = false)
     val isImmersiveMode by Preferences.immersiveFlow.collectAsState(initial = false)
@@ -62,15 +66,27 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val dynamicColor by Preferences.dynamicColorFlow.collectAsState(initial = false)
     val histories by Preferences.getGameHistoryFlow().collectAsState(initial = emptyList())
     var selectedHistory: GameHistory? by remember { mutableStateOf(null) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     // Synchronize global sound states with persistent settings
     Sound.setBgmEnabled(isBgmEnabled)
     Sound.setSoundEnabled(isSoundEnabled)
-    LaunchedEffect(isBgmEnabled) {
-        if (isBgmEnabled) {
-            Sound.playBgm(context)
-        } else {
-            Sound.stopBgm()
+
+    DisposableEffect(lifecycleOwner, isBgmEnabled) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    if (isBgmEnabled) Sound.playBgm(context)
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    Sound.pauseBgm()
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
@@ -82,7 +98,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         activity?.requestedOrientation = when (orientationPreference) {
             Orientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             Orientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            Orientation.AUTO -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
+            Orientation.AUTO -> ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
             Orientation.SYSTEM -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
@@ -94,7 +110,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             composable("menu") {
                 MenuScreen(
                     onStartGame = { navController.navigate("game/${mode.name}") },
-                    onStartGame3D = { navController.navigate("game/${mode.name}") },
                     onViewStats = { navController.navigate("history") },
                     onExit = { activity?.finish() },
                     onPvpMode = { navController.navigate("game/${GameMode.PVP.name}") },
@@ -104,8 +119,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             // Standard New Match Route
             composable("game/{mode}") { backStackEntry ->
-                val modeString = backStackEntry.arguments?.getString("mode") ?: "PVP"
-                val gameMode = GameMode.valueOf(modeString)
+                val modeString = backStackEntry.arguments?.getString("mode") ?: "HARD"
+                val gameMode = try {
+                    GameMode.valueOf(modeString.uppercase())
+                } catch (_: Exception) {
+                    GameMode.HARD
+                }
 
                 GameScreen(
                     mode = gameMode,

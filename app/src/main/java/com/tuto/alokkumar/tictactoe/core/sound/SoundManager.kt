@@ -15,9 +15,8 @@ import com.tuto.alokkumar.tictactoe.R
  * @property isSoundEnabled Flag enabling or disabling action sound effects.
  */
 class SoundManager(
-    var isBgmEnabled: Boolean = true,
-    var isSoundEnabled: Boolean = true
-
+    var isBgmEnabled: Boolean = false,
+    var isSoundEnabled: Boolean = false
 ) {
     private var bgmPlayer: MediaPlayer? = null
     private var soundPool: SoundPool? = null
