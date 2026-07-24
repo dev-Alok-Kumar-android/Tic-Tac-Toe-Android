@@ -4,19 +4,43 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+/**
+ * Overlay overlay rendering standard match control actions when the active game session is paused.
+ *
+ * Dynamically adjusts its design depending on device constraints to support Landscape and Portrait layouts.
+ *
+ * @param modifier Modifier applied to the parent overlay container box.
+ * @param onPlay Trigger callback when the user resumes the active game session.
+ * @param onRestart Trigger callback to restart the game.
+ * @param onHome Action callback navigating the user back to the application main menu.
+ * @param onSettings Action callback navigating the user to settings.
+ * @param visible Visibility state used to animate fade-in or scale-in transitions.
+ */
 @Composable
 fun PauseScreen(
     modifier: Modifier = Modifier,

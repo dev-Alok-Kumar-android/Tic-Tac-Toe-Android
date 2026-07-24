@@ -12,7 +12,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-
+/**
+ * Renders game status announcements including active turns, win/draw banners,
+ * AI thinking progress loaders, and a restart game action button.
+ *
+ * @param currentPlayer Character token indicating whose turn it currently is ('X' or 'O').
+ * @param winner Flat indicator representing final match results: 'X', 'O', 'D' (Draw), or null if match is active.
+ * @param isAiThinking Flag indicating if the background thread is calculating an AI move.
+ * @param modifier Modifier applied to the parent column container.
+ * @param onRestart Callback event triggered when tapping the restart button.
+ */
 @Composable
 fun GameInfoSection(
     currentPlayer: Char,

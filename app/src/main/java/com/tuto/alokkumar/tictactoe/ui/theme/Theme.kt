@@ -34,6 +34,16 @@ private val LightColorScheme = lightColorScheme(
 )
 
 
+/**
+ * Global application design theme wrapper.
+ *
+ * Configures colors, typography scales, and shapes. Dynamically updates light/dark scheme based
+ * on device options or Material You dynamic color algorithms on Android 12+ (API 31+).
+ *
+ * @param appTheme Chosen visual scheme mode (Light, Dark, or System default).
+ * @param dynamicColor True to enable active Material You wallpaper-derived dynamic colors.
+ * @param content Target Composable screen elements to style.
+ */
 @Composable
 fun TicTacToeTheme(
     appTheme: AppTheme = AppTheme.SYSTEM,

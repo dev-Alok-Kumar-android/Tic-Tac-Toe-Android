@@ -21,6 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+/**
+ * Collapsible settings dropdown row showing the current selected option value, and expanding
+ * to show a list of radio buttons for other values.
+ *
+ * @param modifier Modifier applied to the column wrapper.
+ * @param title Title/Name of settings preference being selected.
+ * @param dataList Collection of optional configurations.
+ * @param selected Current active configuration selection.
+ * @param onItemSelect Callback event returning selection updates.
+ */
 @Composable
 fun SettingSelector(
     modifier: Modifier = Modifier,

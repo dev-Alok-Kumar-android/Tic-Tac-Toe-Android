@@ -23,6 +23,21 @@ import kotlinx.coroutines.delay
 import kotlin.math.pow
 import kotlin.random.Random
 
+/**
+ * Renders an interactive canvas background featuring floating animated spring chains (snakes)
+ * that smoothly float and react to user touch coordinates with gravity-like pull forces.
+ *
+ * Supports dynamic speed, stiffness linkage calculations, and parallax/Z-Index layer ordering.
+ *
+ * @param modifier Modifier to apply to the canvas container.
+ * @param baseSpeed Speed multiplier for snake point translations.
+ * @param color Color used to render lines.
+ * @param chainCount Number of snake chains to simulate simultaneously.
+ * @param jointsPerChain Length of each chain (number of joint segments).
+ * @param stiffness Elasticity factor for link spring simulation. Range: 0.05 (soft) to 0.5 (rigid).
+ * @param touchRange Physical attraction radius (in pixels) around drag inputs.
+ * @param modifierZIndex Enable 3D depth illusion (parallax layer sorting and opacity offsets).
+ */
 @Composable
 fun AnimatedLinesBackground(
     modifier: Modifier = Modifier,
@@ -185,6 +200,9 @@ fun AnimatedLinesBackground(
     }
 }
 
+/**
+ * Calculates physics spring logic, pushing and pulling point locations to satisfy segment bounds.
+ */
 private fun resolveSpring(
     current: Offset,
     anchor: Offset,
@@ -205,6 +223,9 @@ private fun resolveSpring(
     return androidx.compose.ui.geometry.lerp(current, targetPos, stiffness)
 }
 
+/**
+ * Calculates border collisions and bounces velocity back when exceeding canvas boundaries.
+ */
 private fun bounce(
     pos: Offset,
     vel: Offset,

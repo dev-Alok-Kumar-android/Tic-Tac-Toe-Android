@@ -6,6 +6,14 @@ import android.media.SoundPool
 import android.util.Log
 import com.tuto.alokkumar.tictactoe.R
 
+/**
+ * Manages game sound effects using [SoundPool] and background music using [MediaPlayer].
+ *
+ * Preloads raw audio resources for low-latency playback during user interaction.
+ *
+ * @property isBgmEnabled Flag enabling or disabling background music.
+ * @property isSoundEnabled Flag enabling or disabling action sound effects.
+ */
 class SoundManager(
     var isBgmEnabled: Boolean = true,
     var isSoundEnabled: Boolean = true
@@ -15,7 +23,11 @@ class SoundManager(
     private var soundPool: SoundPool? = null
     private val soundMap = mutableMapOf<String, Int>()
 
-
+    /**
+     * Initializes the [SoundPool] and loads raw audio assets (move, win, lose, draw).
+     *
+     * @param context Application context used to load raw resources.
+     */
     fun init(context: Context) {
         if (soundPool != null) return
 
@@ -36,6 +48,11 @@ class SoundManager(
     }
 
     // 🎵 Background music
+    /**
+     * Starts background music playback in loop mode if enabled.
+     *
+     * @param context Context used to create [MediaPlayer].
+     */
     fun playBgm(context: Context) {
         if (!isBgmEnabled) return
         if (bgmPlayer == null) {
@@ -45,17 +62,28 @@ class SoundManager(
         bgmPlayer?.start()
     }
 
+    /**
+     * Stops background music playback and frees media resources.
+     */
     fun stopBgm() {
         bgmPlayer?.stop()
         bgmPlayer?.release()
         bgmPlayer = null
     }
 
+    /**
+     * Pauses background music.
+     */
     fun pauseBgm() {
         bgmPlayer?.pause()
     }
 
     // 🔊 Sound effects
+    /**
+     * Plays a preloaded audio sample if sound effect setting is enabled.
+     *
+     * @param name Key name of the sound effect ("move", "win", "lose", "draw").
+     */
     fun playSound(name: String) {
         if (!isSoundEnabled || soundPool == null) return
         soundMap[name]?.let { id ->
@@ -64,7 +92,9 @@ class SoundManager(
         }
     }
 
-
+    /**
+     * Releases active [MediaPlayer] and [SoundPool] instances to reclaim system memory.
+     */
     fun release() {
         bgmPlayer?.release()
         bgmPlayer = null

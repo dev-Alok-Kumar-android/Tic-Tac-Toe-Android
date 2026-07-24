@@ -8,6 +8,13 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 
+/**
+ * Dynamic side-effect helper that updates screen system bars visibility using the native Window insets controller.
+ *
+ * Automatically hides status and navigation panels in full-screen mode, revealing them on gesture swipes.
+ *
+ * @param enabled True to trigger immersive mode full-screen, false to reveal system bars.
+ */
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun ImmersiveMode(enabled: Boolean) {

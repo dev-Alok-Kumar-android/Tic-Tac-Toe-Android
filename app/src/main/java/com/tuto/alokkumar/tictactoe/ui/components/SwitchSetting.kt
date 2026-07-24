@@ -11,6 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 
+/**
+ * Standard visual row layout combining a text label description and a Material binary switch.
+ *
+ * @param modifier Modifier applied to the horizontal row.
+ * @param checked Checked active state of the switch.
+ * @param onCheckedChange Callback event triggered when switch active state toggles.
+ * @param text Descriptive name label printed in the row.
+ */
 @Composable
 fun SwitchSetting(
     modifier: Modifier = Modifier,

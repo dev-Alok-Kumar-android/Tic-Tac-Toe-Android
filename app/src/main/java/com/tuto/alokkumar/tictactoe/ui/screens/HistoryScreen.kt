@@ -26,6 +26,17 @@ import com.tuto.alokkumar.tictactoe.data.GameHistory
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/**
+ * Screen rendering saved Tic Tac Toe match histories.
+ *
+ * Displays match statistics, timestamps, and game difficulty modes. Long-pressing items opens
+ * deletion confirmation alerts.
+ *
+ * @param histories List of persisted history match items.
+ * @param onClear Callback action clearing the entire history collection.
+ * @param onItemClick Callback action resuming/viewing selected history snapshot.
+ * @param onItemClear Callback action deleting a singular history item.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
@@ -97,6 +108,9 @@ fun HistoryScreen(
     }
 }
 
+/**
+ * List row item displaying singular history metrics and local dates.
+ */
 @Composable
 fun HistoryItem(item: GameHistory, modifier: Modifier = Modifier) {
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }

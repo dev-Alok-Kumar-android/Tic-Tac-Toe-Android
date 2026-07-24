@@ -2,9 +2,11 @@ package com.tuto.alokkumar.tictactoe.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,17 +24,28 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.tuto.alokkumar.tictactoe.data.AppTheme
+import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.GameMode
-import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
+import com.tuto.alokkumar.tictactoe.data.Orientation
+import com.tuto.alokkumar.tictactoe.ui.components.NumberPicker
 import com.tuto.alokkumar.tictactoe.ui.components.SettingSelector
 import com.tuto.alokkumar.tictactoe.ui.components.SwitchSetting
 import com.tuto.alokkumar.tictactoe.viewModel.SettingsViewModel
+import java.util.Calendar
 
+/**
+ * Settings configuration screen providing full controls over difficulty, grid sizes, themes, orientation, BGM and sounds,
+ * fullscreen layouts, dynamic wallpapers, background animation, and pre-loading build metadata.
+ *
+ * @param viewModel Attached settings state view model.
+ * @param onBack Callback back navigation action.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -45,11 +58,23 @@ fun SettingsScreen(
     val themeDark by viewModel.theme.collectAsState()
     val soundEnabled by viewModel.soundEnabled.collectAsState()
     val dynamicColor by viewModel.dynamicColor.collectAsState()
-    val version = LocalContext.current.packageManager.getPackageInfo(
-        LocalContext.current.packageName,
-        0
-    ).versionName ?: "Unknown"
-    val year = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+    val boardSize by viewModel.boardSize.collectAsState()
+    val bgAnimationEnabled by viewModel.bgAnimationEnabled.collectAsState()
+    val boardStyle by viewModel.boardStyle.collectAsState()
+    val orientation by viewModel.orientation.collectAsState()
+    
+    val context = LocalContext.current
+    val version = remember(context) {
+        try {
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                0
+            ).versionName ?: "Unknown"
+        } catch (_: Exception) {
+            "1.0.0"
+        }
+    }
+    val year = Calendar.getInstance().get(Calendar.YEAR)
 
     Scaffold(
         topBar = {
@@ -70,7 +95,44 @@ fun SettingsScreen(
         ) {
             SettingSelector(Modifier, "Difficulty", GameMode.entries, selectedGameMode) { viewModel.setGameMode(it as GameMode) }
 
+            SettingSelector(Modifier, "Board Style", BoardStyle.entries, boardStyle) { viewModel.setBoardStyle(it as BoardStyle) }
+
+            Text("Board Configuration", style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth())
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NumberPicker(
+                    label = "Rows",
+                    value = boardSize.y,
+                    onValueChange = { viewModel.setBoardSize(boardSize.copy(y = it)) },
+                    modifier = Modifier.weight(1f)
+                )
+                NumberPicker(
+                    label = "Cols",
+                    value = boardSize.x,
+                    onValueChange = { viewModel.setBoardSize(boardSize.copy(x = it)) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NumberPicker(
+                    label = "Layers (3D)",
+                    value = boardSize.z,
+                    onValueChange = { viewModel.setBoardSize(boardSize.copy(z = it)) },
+                    modifier = Modifier.weight(1f)
+                )
+                NumberPicker(
+                    label = "To Win",
+                    value = boardSize.winCondition,
+                    onValueChange = { viewModel.setBoardSize(boardSize.copy(winCondition = it)) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
             SettingSelector(Modifier, "Theme", AppTheme.entries, themeDark) { viewModel.setTheme(it as AppTheme)}
+            SettingSelector(Modifier, "Orientation", listOf("Portrait", "Landscape", "Auto", "System"), "System") { viewModel.setOrientation(it as Orientation) }
 
             SwitchSetting(
                 checked = bgmEnabled,
@@ -104,11 +166,18 @@ fun SettingsScreen(
             )
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
-            Spacer(modifier = Modifier.weight(1f))
+            SwitchSetting(
+                checked = bgAnimationEnabled,
+                onCheckedChange = { viewModel.toggleBgAnimation() },
+                text = "Background Animations",
+                modifier = Modifier.fillMaxWidth()
+            )
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
+            Spacer(modifier = Modifier.height(16.dp))
             Text("Version v$version", style = MaterialTheme.typography.bodySmall)
             Text("© $year Tic Tac Toe Game", style = MaterialTheme.typography.bodySmall)
             Text("Developed by Alok Kumar", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
-

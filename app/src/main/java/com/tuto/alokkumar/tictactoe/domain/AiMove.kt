@@ -1,12 +1,37 @@
 package com.tuto.alokkumar.tictactoe.domain
 
+/**
+ * AI Decision making utility offering various difficulty level calculations.
+ *
+ * Implements random cell selection (Easy), immediate win/block heuristic checking (Medium),
+ * weight-based tactical evaluations (Heuristic), and comprehensive optimal search trees with
+ * Alpha-Beta pruning (Hard/Minimax).
+ */
 object AiMove {
 
+    /**
+     * Chooses an empty board cell completely at random.
+     * Used directly in `GameMode.EASY` difficulty.
+     *
+     * @param board Flat representation of the active board.
+     * @return A random index representing an empty cell, or null if board is full.
+     */
     fun randomMove(board: List<Char?>): Int? {
         val moves = board.indices.filter { board[it] == null }
         return if (moves.isNotEmpty()) moves.random() else null
     }
 
+    /**
+     * Executes Medium difficulty moves.
+     *
+     * Prioritizes winning moves first, followed by blocking opponent's immediate winning configurations.
+     * Falls back to a random cell selection if no immediate win/block scenario is found.
+     *
+     * @param board Active board contents list.
+     * @param ai Character representing the AI player's token ('X' or 'O').
+     * @param winLines List of lines (combinations of indices) that constitute a win.
+     * @return Recommended board cell index, or null if board is full.
+     */
     fun mediumMove(
         board: List<Char?>,
         ai: Char,
@@ -29,7 +54,16 @@ object AiMove {
         return randomMove(board)
     }
 
-
+    /**
+     * Selects moves using static board heuristics.
+     *
+     * Scores empty cells based on position weights and participation in potential lines.
+     *
+     * @param board Active board contents list.
+     * @param ai Character representing the AI player's token ('X' or 'O').
+     * @param winLines List of winning index lists.
+     * @return Best scored cell index, or null if board is full.
+     */
     fun heuristicMove(
         board: List<Char?>,
         ai: Char,
@@ -78,12 +112,21 @@ object AiMove {
                 countPlayer == line.size - 2 && countEmpty == 2 -> 10
                 else -> 1
             }
-//            if (isCenter(index, board.size)) score += 15
         }
         return score
     }
 
-
+    /**
+     * Executes an optimal turn for 2D boards using the Minimax search tree with Alpha-Beta pruning.
+     *
+     * Recursively projects potential future matches to guarantee defensive blocking or offensive victory.
+     *
+     * @param board Flat representation of the active board.
+     * @param aiSymbol Character token used by the AI player.
+     * @param winLines All possible precomputed index combinations forming a win.
+     * @param maxDepth Max limit on exploration depth to protect thread performance.
+     * @return The mathematically ideal cell index, or null.
+     */
     fun minimaxMove2D(
         board: MutableList<Char?>,
         aiSymbol: Char,

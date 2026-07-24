@@ -31,6 +31,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Main application landing menu page displaying navigation buttons to different modes and panels.
+ *
+ * Implements double-back-tap confirmation and custom [AlertDialog] prompts to securely handle exit requests.
+ *
+ * @param onStartGame NORMAL/AI game match route trigger.
+ * @param onStartGame3D Multi-level 3D game match route trigger.
+ * @param onViewStats Past match history list page router.
+ * @param onExit Hardware OS exit and app close helper callback.
+ * @param onAbout App instruction manuals and contact page router.
+ * @param onSettings Settings panel configuration router.
+ * @param onPvpMode Local Player vs Player route trigger.
+ */
 @Composable
 fun MenuScreen(
     onStartGame: () -> Unit,

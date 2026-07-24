@@ -29,6 +29,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 
+/**
+ * About screen listing game instructions, system specifications, contact forms,
+ * developer references, and links to external social media/portfolios.
+ *
+ * @param onBack Callback event triggered when clicking the top bar back navigation arrow.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
@@ -126,12 +132,24 @@ fun AboutScreen(
                 onClick = {
                     val githubIntent = Intent(
                         Intent.ACTION_VIEW,
-                        "https://github.com/dev-Alok-Kumar-android".toUri()
+                        "https://github.com/AppsByAlok".toUri()
                     )
                     context.startActivity(githubIntent)
                 }
             ) {
                 Text("🌐 View My GitHub")
+            }
+
+            TextButton(
+                onClick = {
+                    val websiteIntent = Intent(
+                        Intent.ACTION_VIEW,
+                        "https://appsbyalok.netlify.app/".toUri()
+                    )
+                    context.startActivity(websiteIntent)
+                }
+            ) {
+                Text("🌐 Website/Portfolio")
             }
 
             Spacer(Modifier.height(24.dp))

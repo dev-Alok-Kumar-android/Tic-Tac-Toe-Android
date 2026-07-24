@@ -1,39 +1,88 @@
 package com.tuto.alokkumar.tictactoe.domain
 
+import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.GameMode
 
 /**
- * Core Tic Tac Toe logic and AI behavior (Easy, Medium, Hard).
- * Pure Kotlin file — no Android or Compose imports.
+ * Scalable Tic Tac Toe logic supporting 2D and 3D boards of any dimensions.
+ *
+ * Implements game state evaluation, player switching, move verification, winning line search
+ * across multi-dimensional grids, and triggers automated AI move calculations.
+ *
+ * @property gameMode Interactive mode defining difficulty level and AI/PvP behavior.
+ * @property boardSize Dimensions of the current play board grid.
  */
 class GameLogic(
-    var gameMode: GameMode = GameMode.PVP
+    var gameMode: GameMode = GameMode.PVP,
+    private val boardSize: BoardSize = BoardSize()
 ) {
-    private val board = MutableList<Char?>(9) { null }
+    private val totalCells = boardSize.x * boardSize.y * boardSize.z
+    private val board = MutableList<Char?>(totalCells) { null }
+
+    /** Precomputed list of all possible winning line index combinations. */
+    private val winningLines: List<List<Int>> = computeWinningLines()
+    
+    /** Current player whose turn it is to place a symbol ('X' or 'O'). */
     var currentPlayer: Char = 'X'
         private set
+
+    /** Stores the winner of the current match: 'X', 'O', 'D' (Draw), or null if active. */
     var winner: Char? = null
         private set
 
+    /** Stored flat indices of cells forming the winning contiguous line. Null if no winner. */
+    var winLine: List<Int>? = null
+        private set
+
+    /** Stores the flat index of the absolute latest placed move. Null if game was just reset. */
+    var lastMove: Int? = null
+        private set
+
+    /**
+     * Resets the game state, clearing board cells and returning starting turn to 'X'.
+     */
     fun resetGame() {
         for (i in board.indices) board[i] = null
         currentPlayer = 'X'
         winner = null
+        winLine = null
+        lastMove = null
     }
 
+    /**
+     * Retrieves an immutable read-only view of the board cell values.
+     */
     fun getBoard(): List<Char?> = board.toList()
 
+    /**
+     * Configures/reloads the game logic state with a predefined list of moves.
+     * Often used during historical state restore.
+     *
+     * @param newBoard Grid state matching internal dimensions size.
+     * @param current The player token whose turn it is now.
+     */
     fun setBoard(newBoard: List<Char?>, current: Char) {
-        for (i in board.indices) {
-            board[i] = newBoard[i]
+        if (newBoard.size == board.size) {
+            for (i in board.indices) {
+                board[i] = newBoard[i]
+            }
         }
         currentPlayer = current
-        winner = null
+        lastMove = null // We don't track last move from loaded history for now
+        checkGameState() // Re-check if winner exists in loaded state
     }
 
+    /**
+     * Places current player's token on the selected cell index if valid.
+     * Automatically evaluates resulting state and triggers player swap.
+     *
+     * @param index Flattened index of target grid cell.
+     * @return True if token was successfully placed, false otherwise.
+     */
     fun makeMove(index: Int): Boolean {
-        if (index !in 0..8 || board[index] != null || winner != null) return false
+        if (index !in 0 until totalCells || board[index] != null || winner != null) return false
         board[index] = currentPlayer
+        lastMove = index
         checkGameState()
         if (winner == null) switchPlayer()
         return true
@@ -44,24 +93,11 @@ class GameLogic(
     }
 
     private fun checkGameState() {
-        val winningCombos = listOf(
-            listOf(0, 1, 2),
-            listOf(3, 4, 5),
-            listOf(6, 7, 8),
-            listOf(0, 3, 6),
-            listOf(1, 4, 7),
-            listOf(2, 5, 8),
-            listOf(0, 4, 8),
-            listOf(2, 4, 6)
-        )
-
-        for (combo in winningCombos) {
-            val (a, b, c) = combo
-            val symbol = board[a]
-            if (symbol != null && symbol == board[b] && symbol == board[c]) {
-                winner = symbol
-                return
-            }
+        val win = findWinner()
+        if (win != null) {
+            winner = win.first
+            winLine = win.second
+            return
         }
 
         if (board.none { it == null }) {
@@ -70,56 +106,118 @@ class GameLogic(
     }
 
     /**
-     * Returns the AI's best move based on difficulty level.
+     * Iterates through precomputed winning lines to detect a winner.
+     */
+    private fun findWinner(): Pair<Char, List<Int>>? {
+        for (line in winningLines) {
+            val symbol = board[line[0]] ?: continue
+            if (line.all { board[it] == symbol }) {
+                return symbol to line
+            }
+        }
+        return null
+    }
+
+    /**
+     * Generates all possible winning line index sequences based on board dimensions and win condition.
+     */
+    private fun computeWinningLines(): List<List<Int>> {
+        val x = boardSize.x
+        val y = boardSize.y
+        val z = boardSize.z
+        val target = boardSize.winCondition
+        val lines = mutableListOf<List<Int>>()
+
+        fun getIndex(ix: Int, iy: Int, iz: Int): Int {
+            if (ix !in 0 until x || iy !in 0 until y || iz !in 0 until z) return -1
+            return iz * (x * y) + iy * x + ix
+        }
+
+        // Potential move directions: (dx, dy, dz)
+        val directions = listOf(
+            Triple(1, 0, 0), Triple(0, 1, 0), Triple(0, 0, 1), // Axes
+            Triple(1, 1, 0), Triple(1, -1, 0), Triple(1, 0, 1), Triple(1, 0, -1), Triple(0, 1, 1), Triple(0, 1, -1), // 2D Diagonals
+            Triple(1, 1, 1), Triple(1, 1, -1), Triple(1, -1, 1), Triple(1, -1, -1) // 3D Diagonals
+        )
+
+        for (iz in 0 until z) {
+            for (iy in 0 until y) {
+                for (ix in 0 until x) {
+                    for ((dx, dy, dz) in directions) {
+                        val line = mutableListOf<Int>()
+                        var valid = true
+                        for (step in 0 until target) {
+                            val nextIdx = getIndex(ix + dx * step, iy + dy * step, iz + dz * step)
+                            if (nextIdx != -1) {
+                                line.add(nextIdx)
+                            } else {
+                                valid = false
+                                break
+                            }
+                        }
+                        if (valid && line.size == target) {
+                            // Deduplicate lines by sorting indices
+                            val sortedLine = line.sorted()
+                            if (!lines.contains(sortedLine)) {
+                                lines.add(sortedLine)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return lines
+    }
+
+    /**
+     * Calculates the ideal AI action cell depending on the configured game mode difficulty.
+     *
+     * @param aiSymbol Character token used by the active AI routine.
+     * @return Ideal flat index cell choice, or null if board is fully occupied.
      */
     fun getBestMove(aiSymbol: Char): Int? {
-        val availableMoves = board
-            .mapIndexedNotNull { i, cell -> if (cell == null) i else null }
-
+        val availableMoves = board.mapIndexedNotNull { i, cell -> if (cell == null) i else null }
         if (availableMoves.isEmpty()) return null
 
+        val isStandard = boardSize.x == 3 && boardSize.y == 3 && boardSize.z == 1
+        
         return when (gameMode) {
-            GameMode.EASY -> getRandomMove(availableMoves)
+            GameMode.EASY -> availableMoves.random()
             GameMode.MEDIUM -> getMediumMove(aiSymbol, availableMoves)
-            GameMode.HARD -> getMinimaxMove(aiSymbol)
-            else -> null
+            GameMode.HARD -> {
+                if (isStandard) getMinimaxMove(aiSymbol) else getMediumMove(aiSymbol, availableMoves)
+            }
+            else -> availableMoves.random()
         }
     }
 
-    // ---------------- EASY MODE ----------------
-    private fun getRandomMove(moves: List<Int>): Int {
+    private fun getMediumMove(aiSymbol: Char, moves: List<Int>): Int {
+        val playerSymbol = if (aiSymbol == 'X') 'O' else 'X'
+        
+        // 1. Win if possible
+        for (i in moves) {
+            board[i] = aiSymbol
+            if (findWinner()?.first == aiSymbol) {
+                board[i] = null
+                return i
+            }
+            board[i] = null
+        }
+
+        // 2. Block player
+        for (i in moves) {
+            board[i] = playerSymbol
+            if (findWinner()?.first == playerSymbol) {
+                board[i] = null
+                return i
+            }
+            board[i] = null
+        }
+
+        // 3. Fallback to center or random
         return moves.random()
     }
 
-    // ---------------- MEDIUM MODE ----------------
-    private fun getMediumMove(aiSymbol: Char, moves: List<Int>): Int {
-        val playerSymbol = if (aiSymbol == 'X') 'O' else 'X'
-
-        // 1️⃣ Try to win
-        for (i in moves) {
-            board[i] = aiSymbol
-            if (isWinning(aiSymbol)) {
-                board[i] = null
-                return i
-            }
-            board[i] = null
-        }
-
-        // 2️⃣ Try to block opponent
-        for (i in moves) {
-            board[i] = playerSymbol
-            if (isWinning(playerSymbol)) {
-                board[i] = null
-                return i
-            }
-            board[i] = null
-        }
-
-        // 3️⃣ Otherwise random
-        return getRandomMove(moves)
-    }
-
-    // ---------------- HARD MODE (MINIMAX + ALPHA-BETA) ----------------
     private fun getMinimaxMove(aiSymbol: Char): Int {
         var bestScore = Int.MIN_VALUE
         var bestMove = -1
@@ -135,80 +233,48 @@ class GameLogic(
                 }
             }
         }
-        return bestMove
+        return if (bestMove != -1) bestMove else board.indices.first { board[it] == null }
     }
 
-    private fun minimax(
-        depth: Int,
-        isMaximizing: Boolean,
-        aiSymbol: Char,
-        alphaInit: Int,
-        betaInit: Int
-    ): Int {
-        val playerSymbol = if (aiSymbol == 'X') 'O' else 'X'
-        val result = getWinnerForAI()
-        var alpha = alphaInit
-        var beta = betaInit
+    private fun minimax(depth: Int, isMax: Boolean, ai: Char, alpha: Int, beta: Int): Int {
+        val player = if (ai == 'X') 'O' else 'X'
+        val win = findWinner()?.first
+        if (win == ai) return 10 - depth
+        if (win == player) return depth - 10
+        if (board.none { it == null }) return 0
+        
+        // For 3x3 standard board, depth 9 is fine. 
+        // We only call this for standard boards in getBestMove.
 
-        when (result) {
-            aiSymbol -> return 10 - depth
-            playerSymbol -> return depth - 10
-            'D' -> return 0
-        }
+        var a = alpha
+        var b = beta
 
-        if (isMaximizing) {
-            var maxEval = Int.MIN_VALUE
+        if (isMax) {
+            var best = Int.MIN_VALUE
             for (i in board.indices) {
                 if (board[i] == null) {
-                    board[i] = aiSymbol
-                    val eval = minimax(depth + 1, false, aiSymbol, alpha, beta)
+                    board[i] = ai
+                    val score = minimax(depth + 1, false, ai, a, b)
                     board[i] = null
-                    maxEval = maxOf(maxEval, eval)
-                    alpha = maxOf(alpha, eval)
-                    if (beta <= alpha) break
+                    best = maxOf(best, score)
+                    a = maxOf(a, best)
+                    if (b <= a) break
                 }
             }
-            return maxEval
+            return best
         } else {
-            var minEval = Int.MAX_VALUE
+            var best = Int.MAX_VALUE
             for (i in board.indices) {
                 if (board[i] == null) {
-                    board[i] = playerSymbol
-                    val eval = minimax(depth + 1, true, aiSymbol, alpha, beta)
+                    board[i] = player
+                    val score = minimax(depth + 1, true, ai, a, b)
                     board[i] = null
-                    minEval = minOf(minEval, eval)
-                    beta = minOf(beta, eval)
-                    if (beta <= alpha) break
+                    best = minOf(best, score)
+                    b = minOf(b, best)
+                    if (b <= a) break
                 }
             }
-            return minEval
+            return best
         }
-    }
-
-    // Helper for Medium and Minimax checks
-    private fun isWinning(symbol: Char): Boolean {
-        val combos = listOf(
-            listOf(0, 1, 2), listOf(3, 4, 5), listOf(6, 7, 8),
-            listOf(0, 3, 6), listOf(1, 4, 7), listOf(2, 5, 8),
-            listOf(0, 4, 8), listOf(2, 4, 6)
-        )
-        return combos.any { (a, b, c) ->
-            board[a] == symbol && board[b] == symbol && board[c] == symbol
-        }
-    }
-
-    private fun getWinnerForAI(): Char? {
-        val combos = listOf(
-            listOf(0, 1, 2), listOf(3, 4, 5), listOf(6, 7, 8),
-            listOf(0, 3, 6), listOf(1, 4, 7), listOf(2, 5, 8),
-            listOf(0, 4, 8), listOf(2, 4, 6)
-        )
-        for (combo in combos) {
-            val (a, b, c) = combo
-            val s = board[a]
-            if (s != null && s == board[b] && s == board[c]) return s
-        }
-        if (board.none { it == null }) return 'D'
-        return null
     }
 }
