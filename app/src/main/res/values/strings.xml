@@ -2,4 +2,67 @@
     <string name="app_name">Tic Tac Toe</string>
     <string name="language_english">English</string>
     <string name="language_hindi">हिन्दी</string>
+
+    <!-- Menu Screen -->
+    <string name="play_vs_ai">PLAY VS AI</string>
+    <string name="play_vs_player">PLAY VS PLAYER</string>
+    <string name="history">HISTORY</string>
+    <string name="settings">SETTINGS</string>
+    <string name="about">ABOUT</string>
+    <string name="quick_setup">Quick Setup</string>
+    <string name="rows">Rows</string>
+    <string name="cols">Cols</string>
+    <string name="layers">Layers</string>
+    <string name="to_win">To Win</string>
+    <string name="style">Style</string>
+    <string name="difficulty">Difficulty</string>
+    <string name="first_move">First Move</string>
+    <string name="exit_game_title">Exit Game?</string>
+    <string name="exit_game_message">Are you sure you want to quit Tic Tac Toe?</string>
+    <string name="exit_confirm">Exit</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Game Screen -->
+    <string name="turn_label">Turn: %1$s</string>
+    <string name="draw_message">It\'s a Draw!</string>
+    <string name="winner_label">Winner: %1$s 🎉</string>
+    <string name="opponent_thinking">Opponent Thinking…</string>
+    <string name="analyzing">Analyzing…</string>
+    <string name="restart_match">Restart Match</string>
+    <string name="player_x">Player X</string>
+    <string name="player_o">Player O</string>
+    <string name="ai_o">AI (O)</string>
+    <string name="draws">Draws</string>
+
+    <!-- Settings -->
+    <string name="language">Language</string>
+    <string name="theme">Theme</string>
+    <string name="orientation">Orientation</string>
+    <string name="bgm">Background Music</string>
+    <string name="sfx">Sound Effects</string>
+    <string name="immersive">FullScreen Mode</string>
+    <string name="dynamic_color">Dynamic Color</string>
+    <string name="bg_animation">Background Animations</string>
+    <string name="ai_skill_level">AI Skill Level: %1$d</string>
+    <string name="advanced_ai">Advanced AI Settings</string>
+    <string name="manual_depth">Manual Search Depth: %1$d</string>
+    <string name="depth_warning">Warning: High depth (> 8) on large boards can be very slow!</string>
+    <string name="developed_by">Developed by Alok Kumar</string>
+    <string name="paused">Paused</string>
+    <string name="home">Home</string>
+    <string name="resume_game">Resume Game</string>
+    <string name="next_game_start">Next Game Start</string>
+    <string name="board_config">Board Configuration</string>
+    <string name="edition_subtitle">3D MULTI-LAYER EDITION</string>
+    <string name="about_description">Play Tic Tac Toe with friends or against AI of different difficulty levels. Challenge yourself and test your strategy!</string>
+    <string name="how_to_play">How to Play</string>
+    <string name="how_to_play_details">1. Choose your mode: Player vs Player or Player vs AI.\n2. Take turns placing Xs and Os on the grid.\n3. The first player to align symbols in a row, column, or diagonal wins.\n4. If the board fills without a winner, it’s a draw!</string>
+    <string name="contact_me">Contact Me</string>
+    <string name="send_email">📧 Send Email</string>
+    <string name="view_github">🌐 View My GitHub</string>
+    <string name="view_portfolio">🌐 Website/Portfolio</string>
+    <string name="more">More</string>
+    <string name="more_details">More exciting games and apps are coming soon! Stay tuned.</string>
+    <string name="increase">Increase</string>
+    <string name="decrease">Decrease</string>
 </resources>

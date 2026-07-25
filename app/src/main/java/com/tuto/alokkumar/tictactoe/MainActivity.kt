@@ -1,5 +1,6 @@
 package com.tuto.alokkumar.tictactoe
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,9 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
+import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
 import com.tuto.alokkumar.tictactoe.core.sound.SoundManager
+import com.tuto.alokkumar.tictactoe.core.util.ContextUtils
+import com.tuto.alokkumar.tictactoe.data.AppLanguage
 import com.tuto.alokkumar.tictactoe.ui.theme.TicTacToeTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 /**
@@ -27,11 +35,41 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var soundManager: SoundManager
 
+    @Inject
+    lateinit var preferences: PreferencesManager
+
+    override fun attachBaseContext(newBase: Context) {
+        // Blocks to get the initial language preference
+        val lang = runBlocking {
+            try {
+                // Since this is called before Hilt is fully injected, 
+                // we might need to create a temporary instance or use a simpler read.
+                // However, PreferencesManager just needs a context.
+                val prefs = PreferencesManager(newBase)
+                val userPrefs = prefs.userPreferencesFlow.first()
+                if (userPrefs.appLanguage == AppLanguage.HINDI) "hi" else "en"
+            } catch (_: Exception) {
+                "en"
+            }
+        }
+        super.attachBaseContext(ContextUtils.updateLocale(newBase, lang))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        // Note: Global managers initialization now handled by Hilt injection
+        // React to language changes and recreate activity
+        lifecycleScope.launch {
+            preferences.userPreferencesFlow.collect { userPrefs ->
+                val currentLang = if (userPrefs.appLanguage == AppLanguage.HINDI) "hi" else "en"
+                val configLang = resources.configuration.locales[0].language
+                if (currentLang != configLang) {
+                    recreate()
+                }
+            }
+        }
+        
         soundManager.init(applicationContext)
 
         setContent {

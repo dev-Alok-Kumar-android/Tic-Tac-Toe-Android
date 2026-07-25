@@ -1,5 +1,10 @@
 package com.tuto.alokkumar.tictactoe.viewModel
 
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -36,6 +41,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 @HiltViewModel
 class GameViewModel @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
     private val preferences: PreferencesManager,
     private val soundManager: SoundManager,
     savedStateHandle: SavedStateHandle
@@ -126,6 +132,37 @@ class GameViewModel @Inject constructor(
         }
     }
 
+    private fun triggerHaptic(type: String) {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = context.getSystemService(VibratorManager::class.java)
+            vibratorManager?.defaultVibrator ?: return
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
+        }
+
+        if (vibrator.hasVibrator()) {
+            when (type) {
+                "move" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(30)
+                    }
+                }
+                "win" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 200), -1))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(longArrayOf(0, 100, 50, 200), -1)
+                    }
+                }
+            }
+        }
+    }
+
     fun onCellClicked(index: Int) {
         if (_isOpponentThinking.value || _isPaused.value) return
         
@@ -137,6 +174,7 @@ class GameViewModel @Inject constructor(
 
         if (logic.makeMove(index)) {
             soundManager.playSound("move")
+            triggerHaptic("move")
             checkAndHandleResult()
             
             // Trigger AI if match is ongoing and it's AI's turn (currentPlayer != humanSymbol)
@@ -152,12 +190,19 @@ class GameViewModel @Inject constructor(
     }
 
     private suspend fun aiMove() {
+        val prefs = preferences.userPreferencesFlow.first()
         val move = withContext(Dispatchers.Default) {
-            logic.getBestMove(logic.currentPlayer)
+            logic.getBestMove(
+                aiSymbol = logic.currentPlayer,
+                strength = prefs.aiStrength,
+                isManualDepth = prefs.isAdvancedAiEnabled,
+                manualDepth = prefs.manualMaxDepth
+            )
         }
         if (move != null) {
             logic.makeMove(move)
             soundManager.playSound("move")
+            triggerHaptic("move")
             checkAndHandleResult()
         }
     }
@@ -168,9 +213,9 @@ class GameViewModel @Inject constructor(
 
         if (winner != null) {
             when (winner) {
-                'X' -> soundManager.playSound("win")
-                'O' -> soundManager.playSound("lose")
-                'D' -> soundManager.playSound("draw")
+                'X' -> { soundManager.playSound("win"); triggerHaptic("win") }
+                'O' -> { soundManager.playSound("lose"); triggerHaptic("move") }
+                'D' -> { soundManager.playSound("draw"); triggerHaptic("move") }
             }
         }
 

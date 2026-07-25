@@ -22,10 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.tuto.alokkumar.tictactoe.R
 import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 
 /**
@@ -51,12 +53,12 @@ fun AboutScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("About") },
+                title = { Text(stringResource(R.string.about)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = MyIcons.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.cancel)
                         )
                     }
                 }
@@ -74,15 +76,14 @@ fun AboutScreen(
         ) {
 
             Text(
-                "Tic Tac Toe Game",
+                stringResource(R.string.app_name) + " Game",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 textAlign = TextAlign.Center
             )
 
             Spacer(Modifier.height(12.dp))
             Text(
-                "Play Tic Tac Toe with friends or against AI of different difficulty levels. "
-                        + "Challenge yourself and test your strategy!",
+                stringResource(R.string.about_description),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center
             )
@@ -93,15 +94,12 @@ fun AboutScreen(
 
             // 🧩 How to Play
             Text(
-                "How to Play",
+                stringResource(R.string.how_to_play),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "1. Choose your mode: Player vs Player or Player vs AI.\n" +
-                        "2. Take turns placing Xs and Os on the grid.\n" +
-                        "3. The first player to align 3 symbols in a row, column, or diagonal wins.\n" +
-                        "4. If the board fills without a winner, it’s a draw!",
+                stringResource(R.string.how_to_play_details),
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -111,7 +109,7 @@ fun AboutScreen(
 
             // 📩 Contact
             Text(
-                "Contact Me",
+                stringResource(R.string.contact_me),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(Modifier.height(8.dp))
@@ -124,7 +122,7 @@ fun AboutScreen(
                     context.startActivity(intent)
                 }
             ) {
-                Text("📧 Send Email")
+                Text(stringResource(R.string.send_email))
             }
 
             TextButton(
@@ -136,7 +134,7 @@ fun AboutScreen(
                     context.startActivity(githubIntent)
                 }
             ) {
-                Text("🌐 View My GitHub")
+                Text(stringResource(R.string.view_github))
             }
 
             TextButton(
@@ -148,7 +146,7 @@ fun AboutScreen(
                     context.startActivity(websiteIntent)
                 }
             ) {
-                Text("🌐 Website/Portfolio")
+                Text(stringResource(R.string.view_portfolio))
             }
 
             Spacer(Modifier.height(24.dp))
@@ -157,12 +155,12 @@ fun AboutScreen(
 
             // 📱 More
             Text(
-                "More",
+                stringResource(R.string.more),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "More exciting games and apps are coming soon! Stay tuned.",
+                stringResource(R.string.more_details),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center
             )
@@ -175,7 +173,7 @@ fun AboutScreen(
             Text("Version v$version", style = MaterialTheme.typography.bodySmall)
             Text("© $year Tic Tac Toe Game", style = MaterialTheme.typography.bodySmall)
             Text("Licensed under MIT", style = MaterialTheme.typography.bodySmall)
-            Text("Developed by Alok Kumar", style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.developed_by), style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(12.dp))
         }
     }

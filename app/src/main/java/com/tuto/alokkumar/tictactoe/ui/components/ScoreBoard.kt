@@ -20,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tuto.alokkumar.tictactoe.R
 
 /**
  * Scoreboard indicator showing current game session metrics.
@@ -60,7 +62,7 @@ fun ScoreBoard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             ScoreItem(
-                title = "Player X",
+                title = stringResource(R.string.player_x),
                 score = xWins,
                 color = MaterialTheme.colorScheme.secondary,
                 icon = MyIcons.Person
@@ -72,7 +74,7 @@ fun ScoreBoard(
             )
             
             ScoreItem(
-                title = "Draws",
+                title = stringResource(R.string.draws),
                 score = draws,
                 color = MaterialTheme.colorScheme.outline,
                 icon = MyIcons.Star
@@ -84,7 +86,7 @@ fun ScoreBoard(
             )
             
             ScoreItem(
-                title = if (isPlayerOAI) "AI (O)" else "Player O",
+                title = if (isPlayerOAI) stringResource(R.string.ai_o) else stringResource(R.string.player_o),
                 score = oWins,
                 color = MaterialTheme.colorScheme.tertiary,
                 icon = if (isPlayerOAI) MyIcons.Face else MyIcons.Person

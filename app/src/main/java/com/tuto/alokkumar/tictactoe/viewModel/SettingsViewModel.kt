@@ -113,6 +113,21 @@ class SettingsViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), NextMoveBehavior.ALTERNATING
     )
 
+    /** Granular AI skill level (1-100). */
+    val aiStrength = preferences.aiStrengthFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), 75
+    )
+
+    /** Flag for manual AI depth override. */
+    val isAdvancedAiEnabled = preferences.isAdvancedAiEnabledFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), false
+    )
+
+    /** Manual search depth limit. */
+    val manualMaxDepth = preferences.manualMaxDepthFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), 6
+    )
+
     /** Active application language. */
     val appLanguage = preferences.userPreferencesFlow.map { it.appLanguage }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), AppLanguage.ENGLISH
@@ -211,6 +226,28 @@ class SettingsViewModel @Inject constructor(
     fun setNextMoveBehavior(behavior: NextMoveBehavior) {
         viewModelScope.launch {
             preferences.setNextMoveBehavior(behavior)
+        }
+    }
+
+    /** Updates AI skill level (1-100). */
+    fun setAiStrength(strength: Int) {
+        viewModelScope.launch {
+            preferences.updatePrefs { it.copy(aiStrength = strength) }
+        }
+    }
+
+    /** Toggles advanced AI settings section. */
+    fun toggleAdvancedAi() {
+        viewModelScope.launch {
+            val current = isAdvancedAiEnabled.value
+            preferences.updatePrefs { it.copy(isAdvancedAiEnabled = !current) }
+        }
+    }
+
+    /** Updates manual search depth. */
+    fun setManualMaxDepth(depth: Int) {
+        viewModelScope.launch {
+            preferences.updatePrefs { it.copy(manualMaxDepth = depth) }
         }
     }
 }

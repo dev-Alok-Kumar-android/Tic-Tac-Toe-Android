@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuto.alokkumar.tictactoe.R
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
@@ -70,12 +72,14 @@ fun MenuScreen(
     val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
     val gameMode by viewModel.gameMode.collectAsStateWithLifecycle()
     val firstMoveBehavior by viewModel.firstMoveBehavior.collectAsStateWithLifecycle()
+    val aiStrength by viewModel.aiStrength.collectAsStateWithLifecycle()
 
     MenuScreenContent(
         boardSize = boardSize,
         boardStyle = boardStyle,
         gameMode = gameMode,
         firstMoveBehavior = firstMoveBehavior,
+        aiStrength = aiStrength,
         onStartGame = { onStartGame(gameMode, boardSize) },
         onViewStats = onViewStats,
         onExit = onExit,
@@ -95,6 +99,7 @@ fun MenuScreenContent(
     boardStyle: BoardStyle,
     gameMode: GameMode,
     firstMoveBehavior: FirstMoveBehavior,
+    aiStrength: Int,
     onStartGame: () -> Unit,
     onViewStats: () -> Unit,
     onExit: () -> Unit,
@@ -129,16 +134,16 @@ fun MenuScreenContent(
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
-            title = { Text("Exit Game?") },
-            text = { Text("Are you sure you want to quit Tic Tac Toe?") },
+            title = { Text(stringResource(R.string.exit_game_title)) },
+            text = { Text(stringResource(R.string.exit_game_message)) },
             confirmButton = {
                 TextButton(onClick = { onExit() }) {
-                    Text("Exit")
+                    Text(stringResource(R.string.exit_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showExitDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -185,6 +190,7 @@ fun MenuScreenContent(
                             boardStyle = boardStyle,
                             selectedGameMode = gameMode,
                             firstMoveBehavior = firstMoveBehavior,
+                            aiStrength = aiStrength,
                             onBoardSizeChange = onBoardSizeChange,
                             onBoardStyleChange = onBoardStyleChange,
                             onGameModeChange = onGameModeChange,
@@ -229,7 +235,7 @@ fun MenuScreenContent(
                     // Title
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "TIC TAC TOE",
+                            text = stringResource(R.string.app_name).uppercase(),
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.displayMedium,
                             fontWeight = FontWeight.Black,
@@ -237,7 +243,7 @@ fun MenuScreenContent(
                             letterSpacing = 4.sp
                         )
                         Text(
-                            text = "3D MULTI-LAYER EDITION",
+                            text = stringResource(R.string.edition_subtitle),
                             color = MaterialTheme.colorScheme.secondary,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
@@ -251,6 +257,7 @@ fun MenuScreenContent(
                         boardStyle = boardStyle,
                         selectedGameMode = gameMode,
                         firstMoveBehavior = firstMoveBehavior,
+                        aiStrength = aiStrength,
                         onBoardSizeChange = onBoardSizeChange,
                         onBoardStyleChange = onBoardStyleChange,
                         onGameModeChange = onGameModeChange,
@@ -281,6 +288,7 @@ private fun QuickSetupCard(
     boardStyle: BoardStyle,
     selectedGameMode: GameMode,
     firstMoveBehavior: FirstMoveBehavior,
+    aiStrength: Int,
     onBoardSizeChange: (BoardSize) -> Unit,
     onBoardStyleChange: (BoardStyle) -> Unit,
     onGameModeChange: (GameMode) -> Unit,
@@ -301,7 +309,7 @@ private fun QuickSetupCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                "Quick Setup",
+                stringResource(R.string.quick_setup),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -313,14 +321,14 @@ private fun QuickSetupCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     NumberPicker(
-                        label = "Rows",
+                        label = stringResource(R.string.rows),
                         value = boardSize.y,
                         onValueChange = { onBoardSizeChange(boardSize.copy(y = it)) },
                         range = 3..10,
                         modifier = Modifier.weight(1f)
                     )
                     NumberPicker(
-                        label = "Cols",
+                        label = stringResource(R.string.cols),
                         value = boardSize.x,
                         onValueChange = { onBoardSizeChange(boardSize.copy(x = it)) },
                         range = 3..10,
@@ -333,14 +341,14 @@ private fun QuickSetupCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     NumberPicker(
-                        label = "Layers",
+                        label = stringResource(R.string.layers),
                         value = boardSize.z,
                         onValueChange = { onBoardSizeChange(boardSize.copy(z = it)) },
                         range = 1..10,
                         modifier = Modifier.weight(1f)
                     )
                     NumberPicker(
-                        label = "To Win",
+                        label = stringResource(R.string.to_win),
                         value = boardSize.winCondition,
                         onValueChange = { onBoardSizeChange(boardSize.copy(winCondition = it)) },
                         range = 3..maxOf(3, maxOf(boardSize.x, boardSize.y, boardSize.z)),
@@ -349,22 +357,31 @@ private fun QuickSetupCard(
                 }
             }
 
+            if (selectedGameMode == GameMode.HARD || selectedGameMode == GameMode.IMPOSSIBLE) {
+                 val strengthText = if (selectedGameMode == GameMode.IMPOSSIBLE) "100" else aiStrength.toString()
+                 Text(
+                    text = stringResource(R.string.ai_skill_level, strengthText.toInt()),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+
             SettingSelector(
-                title = "Style",
+                title = stringResource(R.string.style),
                 dataList = BoardStyle.entries,
                 selected = boardStyle,
                 onItemSelect = { onBoardStyleChange(it as BoardStyle) }
             )
 
             SettingSelector(
-                title = "Difficulty",
+                title = stringResource(R.string.difficulty),
                 dataList = GameMode.entries,
                 selected = selectedGameMode,
                 onItemSelect = { onGameModeChange(it as GameMode) }
             )
 
             SettingSelector(
-                title = "First Move",
+                title = stringResource(R.string.first_move),
                 dataList = FirstMoveBehavior.entries,
                 selected = firstMoveBehavior,
                 onItemSelect = { onFirstMoveBehaviorChange(it as FirstMoveBehavior) }
@@ -396,7 +413,7 @@ private fun MainActionButtons(
         ) {
             Icon(MyIcons.PlayArrow, contentDescription = null)
             Spacer(Modifier.height(8.dp))
-            Text("PLAY VS AI", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.play_vs_ai), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
         Button(
@@ -411,7 +428,7 @@ private fun MainActionButtons(
             shape = RoundedCornerShape(16.dp),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
         ) {
-            Text("PLAY VS PLAYER", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.play_vs_player), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -429,9 +446,9 @@ private fun BottomNavigation(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        NavigationItem(icon = MyIcons.History, label = "HISTORY", onClick = onViewStats)
-        NavigationItem(icon = MyIcons.Settings, label = "SETTINGS", onClick = onSettings)
-        NavigationItem(icon = MyIcons.Info, label = "ABOUT", onClick = onAbout)
+        NavigationItem(icon = MyIcons.History, label = stringResource(R.string.history), onClick = onViewStats)
+        NavigationItem(icon = MyIcons.Settings, label = stringResource(R.string.settings), onClick = onSettings)
+        NavigationItem(icon = MyIcons.Info, label = stringResource(R.string.about), onClick = onAbout)
     }
 }
 
@@ -471,6 +488,7 @@ private fun MenuPreviewPortrait() {
         boardStyle = BoardStyle.LAYERED_3D,
         gameMode = GameMode.HARD,
         firstMoveBehavior = FirstMoveBehavior.PLAYER_X,
+        aiStrength = 75,
         onStartGame = {},
         onViewStats = {},
         onExit = {},
@@ -492,6 +510,7 @@ private fun MenuPreviewLandscape() {
         boardStyle = BoardStyle.LAYERED_3D,
         gameMode = GameMode.HARD,
         firstMoveBehavior = FirstMoveBehavior.PLAYER_X,
+        aiStrength = 75,
         onStartGame = {},
         onViewStats = {},
         onExit = {},

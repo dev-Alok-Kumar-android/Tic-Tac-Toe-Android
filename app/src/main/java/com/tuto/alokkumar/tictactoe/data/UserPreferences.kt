@@ -33,7 +33,10 @@ data class UserPreferences(
     val orientation: Orientation = Orientation.SYSTEM,
     val appLanguage: AppLanguage = AppLanguage.ENGLISH,
     val firstMoveBehavior: FirstMoveBehavior = FirstMoveBehavior.PLAYER_X,
-    val nextMoveBehavior: NextMoveBehavior = NextMoveBehavior.ALTERNATING
+    val nextMoveBehavior: NextMoveBehavior = NextMoveBehavior.ALTERNATING,
+    val aiStrength: Int = 75,
+    val isAdvancedAiEnabled: Boolean = false,
+    val manualMaxDepth: Int = 6
 )
 
 /**
@@ -48,7 +51,9 @@ enum class GameMode {
     /** Moderate difficulty AI opponent that checks for direct win/blocks. */
     MEDIUM,
     /** Challenging difficulty AI utilizing Minimax with Alpha-Beta pruning. */
-    HARD
+    HARD,
+    /** Perfectly optimal play where losing is mathematically impossible. */
+    IMPOSSIBLE
 }
 
 /**

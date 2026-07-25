@@ -95,6 +95,9 @@ class PreferencesManager(private val appContext: Context) {
     val orientationFlow = userPreferencesFlow.map { it.orientation }
     val firstMoveBehaviorFlow = userPreferencesFlow.map { it.firstMoveBehavior }
     val nextMoveBehaviorFlow = userPreferencesFlow.map { it.nextMoveBehavior }
+    val aiStrengthFlow = userPreferencesFlow.map { it.aiStrength }
+    val isAdvancedAiEnabledFlow = userPreferencesFlow.map { it.isAdvancedAiEnabled }
+    val manualMaxDepthFlow = userPreferencesFlow.map { it.manualMaxDepth }
 
     // --- UNIFIED SETTER ---
     suspend fun updatePrefs(transform: (UserPreferences) -> UserPreferences) {

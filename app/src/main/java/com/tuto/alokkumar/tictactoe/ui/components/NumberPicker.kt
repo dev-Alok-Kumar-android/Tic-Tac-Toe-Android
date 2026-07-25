@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.tuto.alokkumar.tictactoe.R
 
 /**
  * Card based range controller that allows incrementing or decrementing integers.
@@ -70,7 +72,7 @@ fun NumberPicker(
                     onClick = { if (value > range.first) onValueChange(value - 1) },
                     enabled = value > range.first
                 ) {
-                    Icon(MyIcons.Remove, contentDescription = "Decrease")
+                    Icon(MyIcons.Remove, contentDescription = stringResource(R.string.decrease))
                 }
                 Text(
                     text = value.toString(),
@@ -83,7 +85,7 @@ fun NumberPicker(
                     onClick = { if (value < range.last) onValueChange(value + 1) },
                     enabled = value < range.last
                 ) {
-                    Icon(MyIcons.Add, contentDescription = "Increase")
+                    Icon(MyIcons.Add, contentDescription = stringResource(R.string.increase))
                 }
             }
         }

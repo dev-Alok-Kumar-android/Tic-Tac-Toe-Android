@@ -22,8 +22,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tuto.alokkumar.tictactoe.R
 
 /**
  * Overlay overlay rendering standard match control actions when the active game session is paused.
@@ -85,7 +87,7 @@ fun PauseScreen(
                         ) {
                             Icon(
                                 imageVector = MyIcons.Refresh,
-                                contentDescription = "Restart",
+                                contentDescription = stringResource(R.string.restart_match),
                                 modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
@@ -97,7 +99,7 @@ fun PauseScreen(
                         ) {
                             Icon(
                                 imageVector = MyIcons.Home,
-                                contentDescription = "Home",
+                                contentDescription = stringResource(R.string.home),
                                 modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
@@ -109,7 +111,7 @@ fun PauseScreen(
                         ) {
                             Icon(
                                 imageVector = MyIcons.Settings,
-                                contentDescription = "Settings",
+                                contentDescription = stringResource(R.string.settings),
                                 modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
@@ -125,7 +127,7 @@ fun PauseScreen(
                             .fillMaxHeight()
                     ) {
                         Text(
-                            text = "Paused",
+                            text = stringResource(R.string.paused),
                             style = if (compactMode) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -141,7 +143,7 @@ fun PauseScreen(
                         ) {
                             Icon(
                                 imageVector = MyIcons.PlayArrow,
-                                contentDescription = "Resume Game",
+                                contentDescription = stringResource(R.string.resume_game),
                                 modifier = Modifier.size(playInnerSize),
                                 tint = MaterialTheme.colorScheme.primary
                             )
@@ -158,7 +160,7 @@ fun PauseScreen(
                         .padding(24.dp)
                 ) {
                     Text(
-                        text = "Paused",
+                        text = stringResource(R.string.paused),
                         style = MaterialTheme.typography.displaySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -169,7 +171,7 @@ fun PauseScreen(
                     ) {
                         Icon(
                             imageVector = MyIcons.PlayArrow,
-                            contentDescription = "Resume Game",
+                            contentDescription = stringResource(R.string.resume_game),
                             modifier = Modifier.size(160.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
@@ -188,7 +190,7 @@ fun PauseScreen(
                         ) {
                             Icon(
                                 imageVector = MyIcons.Refresh,
-                                contentDescription = "Restart",
+                                contentDescription = stringResource(R.string.restart_match),
                                 modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
@@ -200,7 +202,7 @@ fun PauseScreen(
                         ) {
                             Icon(
                                 imageVector = MyIcons.Home,
-                                contentDescription = "Home",
+                                contentDescription = stringResource(R.string.home),
                                 modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
@@ -212,7 +214,7 @@ fun PauseScreen(
                         ) {
                             Icon(
                                 imageVector = MyIcons.Settings,
-                                contentDescription = "Settings",
+                                contentDescription = stringResource(R.string.settings),
                                 modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )

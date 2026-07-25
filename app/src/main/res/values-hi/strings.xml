@@ -1,0 +1,68 @@
+<resources>
+    <string name="app_name">टिक टैक टो</string>
+    <string name="language_english">English</string>
+    <string name="language_hindi">हिन्दी</string>
+
+    <!-- Menu Screen -->
+    <string name="play_vs_ai">AI के खिलाफ खेलें</string>
+    <string name="play_vs_player">दोस्त के साथ खेलें</string>
+    <string name="history">इतिहास</string>
+    <string name="settings">सेटिंग्स</string>
+    <string name="about">जानकारी</string>
+    <string name="quick_setup">त्वरित सेटअप</string>
+    <string name="rows">पंक्तियाँ</string>
+    <string name="cols">कॉलम</string>
+    <string name="layers">परतें</string>
+    <string name="to_win">जीतने के लिए</string>
+    <string name="style">शैली</string>
+    <string name="difficulty">कठिनाई</string>
+    <string name="first_move">पहली चाल</string>
+    <string name="exit_game_title">खेल बंद करें?</string>
+    <string name="exit_game_message">क्या आप वाकई टिक टैक टो से बाहर निकलना चाहते हैं?</string>
+    <string name="exit_confirm">बाहर निकलें</string>
+    <string name="cancel">रद्द करें</string>
+
+    <!-- Game Screen -->
+    <string name="turn_label">बारी: %1$s</string>
+    <string name="draw_message">मैच बराबर रहा!</string>
+    <string name="winner_label">विजेता: %1$s 🎉</string>
+    <string name="opponent_thinking">विरोधी सोच रहा है…</string>
+    <string name="analyzing">विश्लेषण कर रहा है…</string>
+    <string name="restart_match">मैच दोबारा शुरू करें</string>
+    <string name="player_x">खिलाड़ी X</string>
+    <string name="player_o">खिलाड़ी O</string>
+    <string name="ai_o">AI (O)</string>
+    <string name="draws">बराबरी</string>
+
+    <!-- Settings -->
+    <string name="language">भाषा</string>
+    <string name="theme">थीम</string>
+    <string name="orientation">स्क्रीन ओरिएंटेशन</string>
+    <string name="bgm">बैकग्राउंड संगीत</string>
+    <string name="sfx">ध्वनि प्रभाव</string>
+    <string name="immersive">फुलस्क्रीन मोड</string>
+    <string name="dynamic_color">डायनामिक रंग</string>
+    <string name="bg_animation">बैकग्राउंड एनिमेशन</string>
+    <string name="ai_skill_level">AI कौशल स्तर: %1$d</string>
+    <string name="advanced_ai">एडवांस AI सेटिंग्स</string>
+    <string name="manual_depth">मैनुअल सर्च गहराई: %1$d</string>
+    <string name="depth_warning">चेतावनी: बड़े बोर्ड पर गहराई (> 8) बहुत धीमी हो सकती है!</string>
+    <string name="developed_by">आलोक कुमार द्वारा विकसित</string>
+    <string name="paused">रुका हुआ</string>
+    <string name="home">होम</string>
+    <string name="resume_game">खेल जारी रखें</string>
+    <string name="next_game_start">अगला खेल शुरू</string>
+    <string name="board_config">बोर्ड कॉन्फ़िगरेशन</string>
+    <string name="edition_subtitle">3D मल्टी-लेयर संस्करण</string>
+    <string name="about_description">दोस्तों के साथ या विभिन्न कठिनाई स्तरों के AI के खिलाफ टिक टैक टो खेलें। खुद को चुनौती दें और अपनी रणनीति का परीक्षण करें!</string>
+    <string name="how_to_play">कैसे खेलें</string>
+    <string name="how_to_play_details">1. अपना मोड चुनें: खिलाड़ी बनाम खिलाड़ी या खिलाड़ी बनाम AI।\n2. ग्रिड पर X और O रखने के लिए अपनी बारी लें।\n3. एक पंक्ति, कॉलम या विकर्ण में प्रतीकों को संरेखित करने वाला पहला खिलाड़ी जीतता है।\n4. यदि बोर्ड बिना किसी विजेता के भर जाता है, तो यह ड्रॉ है!</string>
+    <string name="contact_me">मुझसे संपर्क करें</string>
+    <string name="send_email">📧 ईमेल भेजें</string>
+    <string name="view_github">🌐 मेरा गिटहब देखें</string>
+    <string name="view_portfolio">🌐 वेबसाइट/पोर्टफोलियो</string>
+    <string name="more">अधिक</string>
+    <string name="more_details">अधिक रोमांचक खेल और ऐप्स जल्द ही आ रहे हैं! बने रहें।</string>
+    <string name="increase">बढ़ाएं</string>
+    <string name="decrease">घटाएं</string>
+</resources>

@@ -10,6 +10,7 @@ import kotlin.math.pow
 object AiMove {
 
     private val transpositionTable = mutableMapOf<String, Int>()
+    private const val MAX_TABLE_SIZE = 10000
 
     /**
      * Calculates the best move for any board configuration and difficulty.
@@ -19,23 +20,39 @@ object AiMove {
         ai: Char,
         gameMode: GameMode,
         boardSize: BoardSize,
-        winLines: List<List<Int>>
+        winLines: List<List<Int>>,
+        strength: Int = 100,
+        isManualDepth: Boolean = false,
+        manualDepth: Int = 6
     ): Int? {
         transpositionTable.clear()
         val moves = board.indices.filter { board[it] == null }
         if (moves.isEmpty()) return null
 
+        // 1. Skill Level Randomness: Lower strength increases chance of a non-optimal random move.
+        // Formula: strength 100 -> 0% error, strength 1 -> 90% error
+        val errorChance = (100 - strength) * 0.9 / 100.0
+        if (Math.random() < errorChance && gameMode != GameMode.IMPOSSIBLE) {
+            return moves.random()
+        }
+
         return when (gameMode) {
             GameMode.EASY -> moves.random()
             GameMode.MEDIUM -> mediumMove(board, ai, winLines)
-            GameMode.HARD -> {
-                // Determine max depth based on board complexity
+            GameMode.HARD, GameMode.IMPOSSIBLE -> {
+                // Determine max depth based on complexity OR manual override
                 val totalCells = boardSize.x * boardSize.y * boardSize.z
-                val maxDepth = when {
-                    totalCells <= 9 -> 9  // Full search for 3x3
-                    totalCells <= 16 -> 6 // 4x4
-                    totalCells <= 25 -> 4 // 5x5
-                    else -> 3 // Very large or 3D 3x3x3 (27 cells)
+                val maxDepth = if (isManualDepth) {
+                    manualDepth 
+                } else if (gameMode == GameMode.IMPOSSIBLE && totalCells <= 9) {
+                    9 // Always perfect for 3x3
+                } else {
+                    when {
+                        totalCells <= 9 -> 9  // Full search for 3x3
+                        totalCells <= 16 -> 6 // 4x4
+                        totalCells <= 25 -> 4 // 5x5
+                        else -> 3 // Very large or 3D 3x3x3 (27 cells)
+                    }
                 }
                 optimizedMinimaxMove(board.toMutableList(), ai, winLines, boardSize, maxDepth)
             }
@@ -134,7 +151,7 @@ object AiMove {
                     if (b <= a) break
                 }
             }
-            transpositionTable[cacheKey] = best
+            putInCache(cacheKey, best)
             return best
         } else {
             var best = Int.MAX_VALUE
@@ -148,9 +165,16 @@ object AiMove {
                     if (b <= a) break
                 }
             }
-            transpositionTable[cacheKey] = best
+            putInCache(cacheKey, best)
             return best
         }
+    }
+
+    private fun putInCache(key: String, value: Int) {
+        if (transpositionTable.size >= MAX_TABLE_SIZE) {
+            transpositionTable.clear() // Simple purge when full
+        }
+        transpositionTable[key] = value
     }
 
     private fun evaluateHeuristic(board: List<Char?>, ai: Char, winLines: List<List<Int>>): Int {

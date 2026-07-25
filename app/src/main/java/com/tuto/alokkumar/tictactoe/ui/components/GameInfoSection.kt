@@ -10,8 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tuto.alokkumar.tictactoe.R
 
 /**
  * Renders game status announcements including active turns, win/draw banners,
@@ -39,7 +41,11 @@ fun GameInfoSection(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         AnimatedVisibility(visible = winner == null) {
-            val turnText = if (isPlayerOAI && currentPlayer == 'O') "Opponent Thinking..." else "Turn: $currentPlayer"
+            val turnText = if (isPlayerOAI && currentPlayer == 'O') {
+                stringResource(R.string.opponent_thinking)
+            } else {
+                stringResource(R.string.turn_label, currentPlayer.toString())
+            }
             Text(
                 text = turnText,
                 style = MaterialTheme.typography.titleLarge,
@@ -48,8 +54,13 @@ fun GameInfoSection(
         }
         
         AnimatedVisibility(visible = winner != null) {
+            val winText = if (winner == 'D') {
+                stringResource(R.string.draw_message)
+            } else {
+                stringResource(R.string.winner_label, winner.toString())
+            }
             Text(
-                text = if (winner == 'D') "It's a Draw!" else "Winner: ${winner?: "🧐"} 🎉",
+                text = winText,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Black
@@ -61,12 +72,12 @@ fun GameInfoSection(
             shape = MaterialTheme.shapes.large,
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            Text("Restart Match", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.restart_match), style = MaterialTheme.typography.bodyLarge)
         }
 
         AnimatedVisibility(isOpponentThinking) {
             Text(
-                "Analyzing...",
+                stringResource(R.string.analyzing),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(12.dp),

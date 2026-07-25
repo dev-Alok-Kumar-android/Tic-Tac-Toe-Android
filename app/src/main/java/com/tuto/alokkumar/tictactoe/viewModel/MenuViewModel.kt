@@ -41,6 +41,11 @@ class MenuViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), FirstMoveBehavior.PLAYER_X
     )
 
+    /** Current AI strength level. */
+    val aiStrength = preferences.aiStrengthFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), 75
+    )
+
     fun setBoardSize(size: BoardSize) {
         viewModelScope.launch {
             val maxDim = maxOf(size.x, size.y, size.z)

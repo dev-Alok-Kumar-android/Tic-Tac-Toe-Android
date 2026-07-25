@@ -177,7 +177,21 @@ class GameLogic(
      * @param aiSymbol Character token used by the active AI routine.
      * @return Ideal flat index cell choice, or null if board is fully occupied.
      */
-    fun getBestMove(aiSymbol: Char): Int? {
-        return AiMove.getBestMove(board, aiSymbol, gameMode, boardSize, winningLines)
+    fun getBestMove(
+        aiSymbol: Char,
+        strength: Int = 100,
+        isManualDepth: Boolean = false,
+        manualDepth: Int = 6
+    ): Int? {
+        return AiMove.getBestMove(
+            board = board,
+            ai = aiSymbol,
+            gameMode = gameMode,
+            boardSize = boardSize,
+            winLines = winningLines,
+            strength = strength,
+            isManualDepth = isManualDepth,
+            manualDepth = manualDepth
+        )
     }
 }
