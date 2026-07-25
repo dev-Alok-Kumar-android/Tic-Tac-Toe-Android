@@ -24,8 +24,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -294,7 +292,7 @@ fun GameContent(
                             )
                     ) {
                         Icon(
-                            imageVector = if (isPaused) Icons.Default.PlayArrow else MyIcons.Pause,
+                            imageVector = if (isPaused) MyIcons.PlayArrow else MyIcons.Pause,
                             contentDescription = if (isPaused) "Resume" else "Pause",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(28.dp)
@@ -349,7 +347,7 @@ fun LayerSelector(
                     leadingIcon = if (isSelected) {
                         {
                             Icon(
-                                imageVector = Icons.Default.PlayArrow,
+                                imageVector = MyIcons.PlayArrow,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )

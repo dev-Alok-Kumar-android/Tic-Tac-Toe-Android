@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -57,8 +59,11 @@ fun SettingSelector(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(selected.toString(), style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.padding(4.dp))
-                Text(
-                    if (expanded.value) " ▲" else " ▼", style = MaterialTheme.typography.bodyLarge
+                Icon(
+                    imageVector = if (expanded.value) MyIcons.KeyboardArrowUp else MyIcons.KeyboardArrowDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

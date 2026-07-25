@@ -2,8 +2,7 @@ package com.tuto.alokkumar.tictactoe.ui.screens
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,12 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +44,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
+import com.tuto.alokkumar.tictactoe.data.GameMode
+import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 import com.tuto.alokkumar.tictactoe.ui.components.NumberPicker
 import com.tuto.alokkumar.tictactoe.ui.components.SettingSelector
 import com.tuto.alokkumar.tictactoe.viewModel.MenuViewModel
@@ -64,10 +67,12 @@ fun MenuScreen(
 ) {
     val boardSize by viewModel.boardSize.collectAsStateWithLifecycle()
     val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
+    val gameMode by viewModel.gameMode.collectAsStateWithLifecycle()
 
     MenuScreenContent(
         boardSize = boardSize,
         boardStyle = boardStyle,
+        gameMode = gameMode,
         onStartGame = onStartGame,
         onViewStats = onViewStats,
         onExit = onExit,
@@ -75,7 +80,8 @@ fun MenuScreen(
         onSettings = onSettings,
         onPvpMode = onPvpMode,
         onBoardSizeChange = { size -> viewModel.setBoardSize(size) },
-        onBoardStyleChange = { viewModel.setBoardStyle(it) }
+        onBoardStyleChange = { viewModel.setBoardStyle(it) },
+        onGameModeChange = { viewModel.setGameMode(it) }
     )
 }
 
@@ -83,6 +89,7 @@ fun MenuScreen(
 fun MenuScreenContent(
     boardSize: BoardSize,
     boardStyle: BoardStyle,
+    gameMode: GameMode,
     onStartGame: () -> Unit,
     onViewStats: () -> Unit,
     onExit: () -> Unit,
@@ -90,7 +97,8 @@ fun MenuScreenContent(
     onSettings: () -> Unit,
     onPvpMode: () -> Unit,
     onBoardSizeChange: (BoardSize) -> Unit,
-    onBoardStyleChange: (BoardStyle) -> Unit
+    onBoardStyleChange: (BoardStyle) -> Unit,
+    onGameModeChange: (GameMode) -> Unit
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -131,14 +139,18 @@ fun MenuScreenContent(
     }
 
     Scaffold(
-        containerColor = Color.Transparent // Allow background to show
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        val scrollState = rememberScrollState()
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             if (isLandscape) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -147,25 +159,28 @@ fun MenuScreenContent(
                     Column(
                         modifier = Modifier
                             .weight(1.1f)
-                            .fillMaxHeight(),
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "Tic Tac Toe",
                             color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.headlineMedium,
+                            style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.ExtraBold,
                             textAlign = TextAlign.Center
                         )
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         QuickSetupCard(
                             boardSize = boardSize,
                             boardStyle = boardStyle,
+                            selectedGameMode = gameMode,
                             onBoardSizeChange = onBoardSizeChange,
-                            onBoardStyleChange = onBoardStyleChange
+                            onBoardStyleChange = onBoardStyleChange,
+                            onGameModeChange = onGameModeChange
                         )
                     }
 
@@ -173,16 +188,19 @@ fun MenuScreenContent(
                     Column(
                         modifier = Modifier
                             .weight(0.9f)
-                            .fillMaxHeight(),
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         MainActionButtons(
                             onStartGame = onStartGame,
                             onPvpMode = onPvpMode
                         )
+
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         BottomNavigation(
                             onAbout = onAbout,
@@ -195,27 +213,38 @@ fun MenuScreenContent(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 36.dp),
-                    verticalArrangement = Arrangement.SpaceBetween,
+                        .verticalScroll(scrollState)
+                        .padding(top = 32.dp, start = 24.dp, end = 24.dp, bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Title
-                    Text(
-                        text = "Tic Tac Toe",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "TIC TAC TOE",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.displayMedium,
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Center,
+                            letterSpacing = 4.sp
+                        )
+                        Text(
+                            text = "3D MULTI-LAYER EDITION",
+                            color = MaterialTheme.colorScheme.secondary,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp
+                        )
+                    }
 
                     // Quick Setup Card
                     QuickSetupCard(
                         boardSize = boardSize,
                         boardStyle = boardStyle,
+                        selectedGameMode = gameMode,
                         onBoardSizeChange = onBoardSizeChange,
-                        onBoardStyleChange = onBoardStyleChange
+                        onBoardStyleChange = onBoardStyleChange,
+                        onGameModeChange = onGameModeChange
                     )
 
                     // Main action buttons
@@ -240,8 +269,10 @@ fun MenuScreenContent(
 private fun QuickSetupCard(
     boardSize: BoardSize,
     boardStyle: BoardStyle,
+    selectedGameMode: GameMode,
     onBoardSizeChange: (BoardSize) -> Unit,
-    onBoardStyleChange: (BoardStyle) -> Unit
+    onBoardStyleChange: (BoardStyle) -> Unit,
+    onGameModeChange: (GameMode) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -312,6 +343,13 @@ private fun QuickSetupCard(
                 selected = boardStyle,
                 onItemSelect = { onBoardStyleChange(it as BoardStyle) }
             )
+
+            SettingSelector(
+                title = "Difficulty",
+                dataList = GameMode.entries,
+                selected = selectedGameMode,
+                onItemSelect = { onGameModeChange(it as GameMode) }
+            )
         }
     }
 }
@@ -322,28 +360,39 @@ private fun MainActionButtons(
     onPvpMode: () -> Unit
 ) {
     Column(
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Button(
             onClick = onStartGame,
             modifier = Modifier
-                .fillMaxWidth(0.7f)
+                .fillMaxWidth(0.85f)
                 .height(64.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-            shape = RoundedCornerShape(12.dp)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(16.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
-            Text("START", color = MaterialTheme.colorScheme.primary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Icon(MyIcons.PlayArrow, contentDescription = null)
+            Spacer(Modifier.height(8.dp))
+            Text("PLAY VS AI", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Button(
+            onClick = onPvpMode,
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .height(64.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            ),
+            shape = RoundedCornerShape(16.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
         ) {
-            TextButton(onClick = onPvpMode) {
-                Text("PVP", color = MaterialTheme.colorScheme.primary, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-            }
+            Text("PLAY VS PLAYER", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -355,30 +404,43 @@ private fun BottomNavigation(
     onViewStats: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        TextButton(onClick = onAbout) {
-            Text(
-                "ABOUT",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
-        TextButton(onClick = onSettings) {
-            Text(
-                "SETTINGS",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
-        TextButton(onClick = onViewStats) {
-            Text(
-                "HISTORY",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
+        NavigationItem(icon = MyIcons.History, label = "HISTORY", onClick = onViewStats)
+        NavigationItem(icon = MyIcons.Settings, label = "SETTINGS", onClick = onSettings)
+        NavigationItem(icon = MyIcons.Info, label = "ABOUT", onClick = onAbout)
+    }
+}
+
+@Composable
+private fun NavigationItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(8.dp)
+            .height(56.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.height(24.dp)
+        )
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -388,6 +450,7 @@ private fun MenuPreviewPortrait() {
     MenuScreenContent(
         boardSize = BoardSize(),
         boardStyle = BoardStyle.LAYERED_3D,
+        gameMode = GameMode.HARD,
         onStartGame = {},
         onViewStats = {},
         onExit = {},
@@ -395,7 +458,8 @@ private fun MenuPreviewPortrait() {
         onSettings = {},
         onPvpMode = {},
         onBoardSizeChange = {},
-        onBoardStyleChange = {}
+        onBoardStyleChange = {},
+        onGameModeChange = {}
     )
 }
 
@@ -405,6 +469,7 @@ private fun MenuPreviewLandscape() {
     MenuScreenContent(
         boardSize = BoardSize(),
         boardStyle = BoardStyle.LAYERED_3D,
+        gameMode = GameMode.HARD,
         onStartGame = {},
         onViewStats = {},
         onExit = {},
@@ -412,6 +477,7 @@ private fun MenuPreviewLandscape() {
         onSettings = {},
         onPvpMode = {},
         onBoardSizeChange = {},
-        onBoardStyleChange = {}
+        onBoardStyleChange = {},
+        onGameModeChange = {}
     )
 }

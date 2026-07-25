@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
+import com.tuto.alokkumar.tictactoe.data.GameMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -29,6 +30,11 @@ class MenuViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), BoardStyle.LAYERED_3D
     )
 
+    /** Current game difficulty mode. */
+    val gameMode = preferences.gameModeFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), GameMode.HARD
+    )
+
     fun setBoardSize(size: BoardSize) {
         viewModelScope.launch {
             val maxDim = maxOf(size.x, size.y, size.z)
@@ -45,6 +51,13 @@ class MenuViewModel @Inject constructor(
     fun setBoardStyle(style: BoardStyle) {
         viewModelScope.launch {
             preferences.setBoardStyle(style)
+        }
+    }
+
+    /** Updates the selected game difficulty. */
+    fun setGameMode(mode: GameMode) {
+        viewModelScope.launch {
+            preferences.setGameMode(mode)
         }
     }
 }

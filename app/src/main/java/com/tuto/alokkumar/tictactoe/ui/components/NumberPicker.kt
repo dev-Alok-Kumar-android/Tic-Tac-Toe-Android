@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,7 +70,7 @@ fun NumberPicker(
                     onClick = { if (value > range.first) onValueChange(value - 1) },
                     enabled = value > range.first
                 ) {
-                    Icon(Icons.Default.Clear, contentDescription = "Decrease")
+                    Icon(MyIcons.Remove, contentDescription = "Decrease")
                 }
                 Text(
                     text = value.toString(),
@@ -86,7 +83,7 @@ fun NumberPicker(
                     onClick = { if (value < range.last) onValueChange(value + 1) },
                     enabled = value < range.last
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Increase")
+                    Icon(MyIcons.Add, contentDescription = "Increase")
                 }
             }
         }

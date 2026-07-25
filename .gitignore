@@ -11,3 +11,5 @@ captures/
 .DS_Store
 Thumbs.db
 /.artifacts/
+**/*.artifact.md
+**/.artifacts*/

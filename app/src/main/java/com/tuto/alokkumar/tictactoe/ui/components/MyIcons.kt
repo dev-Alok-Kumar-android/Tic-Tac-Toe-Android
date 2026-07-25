@@ -1,17 +1,37 @@
 package com.tuto.alokkumar.tictactoe.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
- * Accessor object grouping custom vector graphic icons compiled as [ImageVector] code representations.
+ * Unique "Cyber-Grid" icon collection for Tic Tac Toe.
+ * 
+ * Refined V2: Bolder, cleaner geometric shapes with high-contrast recognition.
+ * Strictly constrained to 24x24 viewport for perfect rendering across devices.
  */
 object MyIcons {
-    /** Target pointer icon indicating the last move cell spot. */
+
+    /** Tactical Crosshair - Jump to last move */
     val JumpToLast: ImageVector
         get() = ImageVector.Builder(
             name = "JumpToLast",
@@ -20,44 +40,42 @@ object MyIcons {
             viewportWidth = 24f,
             viewportHeight = 24f
         ).apply {
-            path(
-                fill = SolidColor(Color.Black),
-                pathFillType = PathFillType.EvenOdd
-            ) {
-                moveTo(12f, 8f)
-                curveTo(9.79f, 8f, 8f, 9.79f, 8f, 12f)
-                curveTo(8f, 14.21f, 9.79f, 16f, 12f, 16f)
-                curveTo(14.21f, 16f, 16f, 14.21f, 16f, 12f)
-                curveTo(16f, 9.79f, 14.21f, 8f, 12f, 8f)
-                close()
-                moveTo(20.94f, 11f)
-                curveTo(20.48f, 6.83f, 17.17f, 3.52f, 13f, 3.06f)
-                verticalLineTo(1f)
-                horizontalLineTo(11f)
-                verticalLineTo(3.06f)
-                curveTo(6.83f, 3.52f, 3.52f, 6.83f, 3.06f, 11f)
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(11f, 1f)
+                verticalLineToRelative(3f)
+                curveTo(7.1f, 4.5f, 4.1f, 7.6f, 3.5f, 11.5f)
                 horizontalLineTo(1f)
-                verticalLineTo(13f)
-                horizontalLineTo(3.06f)
-                curveTo(3.52f, 17.17f, 6.83f, 20.48f, 11f, 20.94f)
-                verticalLineTo(23f)
-                horizontalLineTo(13f)
-                verticalLineTo(20.94f)
-                curveTo(17.17f, 20.48f, 20.48f, 17.17f, 20.94f, 13f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(2.5f)
+                curveTo(4.1f, 17.4f, 7.1f, 20.5f, 11f, 21f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(-2f)
+                curveTo(16.9f, 20.5f, 19.9f, 17.4f, 20.5f, 13.5f)
                 horizontalLineTo(23f)
-                verticalLineTo(11f)
-                horizontalLineTo(20.94f)
+                verticalLineToRelative(-2f)
+                horizontalLineToRelative(-2.5f)
+                curveTo(19.9f, 7.6f, 16.9f, 4.5f, 13f, 4f)
+                verticalLineTo(1f)
+                horizontalLineToRelative(-2f)
                 close()
-                moveTo(12f, 19f)
-                curveTo(8.13f, 19f, 5f, 15.87f, 5f, 12f)
-                curveTo(5f, 8.13f, 8.13f, 5f, 12f, 5f)
-                curveTo(15.87f, 5f, 19f, 8.13f, 19f, 12f)
-                curveTo(19f, 15.87f, 15.87f, 19f, 12f, 19f)
+                // Inner Target
+                moveTo(12f, 7f)
+                curveToRelative(2.8f, 0f, 5f, 2.2f, 5f, 5f)
+                reflectiveCurveToRelative(-2.2f, 5f, -5f, 5f)
+                reflectiveCurveToRelative(-5f, -2.2f, -5f, -5f)
+                reflectiveCurveToRelative(2.2f, -5f, 5f, -5f)
+                close()
+                moveTo(12f, 10f)
+                curveToRelative(-1.1f, 0f, -2f, 0.9f, -2f, 2f)
+                reflectiveCurveToRelative(0.9f, 2f, 2f, 2f)
+                reflectiveCurveToRelative(2f, -0.9f, 2f, -2f)
+                reflectiveCurveToRelative(-0.9f, -2f, -2f, -2f)
                 close()
             }
         }.build()
 
-    /** Layered card stack representation icon, used for 3D multi-level indicators. */
+    /** Isometric 3D Board Stack */
     val Layers: ImageVector
         get() = ImageVector.Builder(
             name = "Layers",
@@ -67,26 +85,35 @@ object MyIcons {
             viewportHeight = 24f
         ).apply {
             path(fill = SolidColor(Color.Black)) {
-                moveTo(11.99f, 18.54f)
-                lineToRelative(-7.37f, -5.73f)
-                lineTo(3f, 14.07f)
-                lineToRelative(9f, 7f)
-                lineToRelative(9f, -7f)
-                lineToRelative(-1.63f, -1.27f)
-                lineToRelative(-7.38f, 5.74f)
+                // Top layer
+                moveTo(12f, 2f)
+                lineTo(3f, 7f)
+                lineToRelative(9f, 5f)
+                lineToRelative(9f, -5f)
+                lineToRelative(-9f, -5f)
                 close()
-                moveTo(12f, 16f)
-                lineToRelative(7.36f, -5.73f)
-                lineTo(21f, 9f)
-                lineToRelative(-9f, -7f)
-                lineToRelative(-9f, 7f)
-                lineToRelative(1.63f, 1.27f)
-                lineTo(12f, 16f)
+                // Middle layer shadow
+                moveTo(12f, 13f)
+                lineTo(3.5f, 8.5f)
+                verticalLineToRelative(2f)
+                lineTo(12f, 15f)
+                lineToRelative(8.5f, -4.5f)
+                verticalLineToRelative(-2f)
+                lineTo(12f, 13f)
+                close()
+                // Bottom layer
+                moveTo(12f, 17f)
+                lineTo(3.5f, 12.5f)
+                verticalLineToRelative(2f)
+                lineTo(12f, 19f)
+                lineToRelative(8.5f, -4.5f)
+                verticalLineToRelative(-2f)
+                lineTo(12f, 17f)
                 close()
             }
         }.build()
 
-    /** Double vertical bar pause signifier icon, used inside gameplay overlays. */
+    /** Bold Tactical Pause Bars */
     val Pause: ImageVector
         get() = ImageVector.Builder(
             name = "Pause",
@@ -96,21 +123,22 @@ object MyIcons {
             viewportHeight = 24f
         ).apply {
             path(fill = SolidColor(Color.Black)) {
-                moveTo(6f, 19f)
-                horizontalLineToRelative(4f)
-                verticalLineTo(5f)
-                horizontalLineTo(6f)
-                verticalLineTo(19f)
+                moveTo(5f, 4f)
+                horizontalLineToRelative(6f)
+                verticalLineToRelative(16f)
+                lineTo(5f, 20f)
+                verticalLineTo(4f)
                 close()
-                moveTo(14f, 5f)
-                verticalLineTo(19f)
-                horizontalLineToRelative(4f)
-                verticalLineTo(5f)
-                horizontalLineTo(14f)
+                moveTo(13f, 4f)
+                horizontalLineToRelative(6f)
+                verticalLineToRelative(16f)
+                horizontalLineToRelative(-6f)
+                verticalLineTo(4f)
                 close()
             }
         }.build()
 
+    /** Modern Robot AI Head */
     val Face: ImageVector
         get() = ImageVector.Builder(
             name = "Face",
@@ -120,38 +148,42 @@ object MyIcons {
             viewportHeight = 24f
         ).apply {
             path(fill = SolidColor(Color.Black)) {
-                moveTo(9.0f, 11.75f)
-                curveToRelative(-0.69f, 0.0f, -1.25f, 0.56f, -1.25f, 1.25f)
-                reflectiveCurveToRelative(0.56f, 1.25f, 1.25f, 1.25f)
-                reflectiveCurveToRelative(1.25f, -0.56f, 1.25f, -1.25f)
-                reflectiveCurveToRelative(-0.56f, -1.25f, -1.25f, -1.25f)
+                // Head shell
+                moveTo(4f, 9f)
+                curveToRelative(0f, -1.1f, 0.9f, -2f, 2f, -2f)
+                horizontalLineToRelative(12f)
+                curveToRelative(1.1f, 0f, 2f, 0.9f, 2f, 2f)
+                verticalLineToRelative(9f)
+                curveToRelative(0f, 1.1f, -0.9f, 2f, -2f, 2f)
+                lineTo(6f, 20f)
+                curveToRelative(-1.1f, 0f, -2f, -0.9f, -2f, -2f)
+                verticalLineTo(9f)
                 close()
-                moveTo(15.0f, 11.75f)
-                curveToRelative(-0.69f, 0.0f, -1.25f, 0.56f, -1.25f, 1.25f)
-                reflectiveCurveToRelative(0.56f, 1.25f, 1.25f, 1.25f)
-                reflectiveCurveToRelative(1.25f, -0.56f, 1.25f, -1.25f)
-                reflectiveCurveToRelative(-0.56f, -1.25f, -1.25f, -1.25f)
+                // Left Eye
+                moveTo(9f, 13.5f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                reflectiveCurveToRelative(-0.9f, -2f, -2f, -2f)
+                reflectiveCurveToRelative(-2f, 0.9f, -2f, 2f)
+                reflectiveCurveToRelative(0.9f, 2f, 2f, 2f)
                 close()
-                moveTo(12.0f, 2.0f)
-                curveTo(6.48f, 2.0f, 2.0f, 6.48f, 2.0f, 12.0f)
-                reflectiveCurveToRelative(4.48f, 10.0f, 10.0f, 10.0f)
-                reflectiveCurveToRelative(10.0f, -4.48f, 10.0f, -10.0f)
-                reflectiveCurveTo(17.52f, 2.0f, 12.0f, 2.0f)
+                // Right Eye
+                moveTo(15f, 13.5f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                reflectiveCurveToRelative(-0.9f, -2f, -2f, -2f)
+                reflectiveCurveToRelative(-2f, 0.9f, -2f, 2f)
+                reflectiveCurveToRelative(0.9f, 2f, 2f, 2f)
                 close()
-                moveTo(12.0f, 20.0f)
-                curveToRelative(-4.41f, 0.0f, -8.0f, -3.59f, -8.0f, -8.0f)
-                reflectiveCurveToRelative(3.59f, -8.0f, 8.0f, -8.0f)
-                reflectiveCurveToRelative(8.0f, 3.59f, 8.0f, 8.0f)
-                reflectiveCurveToRelative(-3.59f, 8.0f, -8.0f, 8.0f)
-                close()
-                moveTo(12.0f, 15.0f)
-                curveToRelative(-1.83f, 0.0f, -3.44f, 1.01f, -4.24f, 2.5f)
-                horizontalLineToRelative(8.48f)
-                curveToRelative(-0.8f, -1.49f, -2.41f, -2.5f, -4.24f, -2.5f)
+                // Antenna
+                moveTo(11f, 3f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(4f)
+                horizontalLineToRelative(-2f)
+                verticalLineTo(3f)
                 close()
             }
         }.build()
 
+    /** Bold Tactical Chevron Down */
     val KeyboardArrowDown: ImageVector
         get() = ImageVector.Builder(
             name = "KeyboardArrowDown",
@@ -161,20 +193,15 @@ object MyIcons {
             viewportHeight = 24f
         ).apply {
             path(fill = SolidColor(Color.Black)) {
-                moveTo(8.12f, 9.29f)
-                lineTo(12.0f, 13.17f)
-                lineToRelative(3.88f, -3.88f)
-                curveToRelative(0.39f, -0.39f, 1.02f, -0.39f, 1.41f, 0.0f)
-                curveToRelative(0.39f, 0.39f, 0.39f, 1.02f, 0.0f, 1.41f)
-                lineToRelative(-4.59f, 4.59f)
-                curveToRelative(-0.39f, 0.39f, -1.02f, 0.39f, -1.41f, 0.0f)
-                lineTo(6.7f, 10.7f)
-                curveToRelative(-0.39f, -0.39f, -0.39f, -1.02f, 0.0f, -1.41f)
-                curveToRelative(0.39f, -0.38f, 1.03f, -0.38f, 1.42f, 0.0f)
+                moveTo(12f, 17f)
+                lineTo(4f, 9f)
+                horizontalLineToRelative(16f)
+                lineToRelative(-8f, 8f)
                 close()
             }
         }.build()
 
+    /** Bold Tactical Chevron Up */
     val KeyboardArrowUp: ImageVector
         get() = ImageVector.Builder(
             name = "KeyboardArrowUp",
@@ -184,20 +211,15 @@ object MyIcons {
             viewportHeight = 24f
         ).apply {
             path(fill = SolidColor(Color.Black)) {
-                moveTo(7.41f, 15.41f)
-                lineTo(12.0f, 10.83f)
-                lineToRelative(4.59f, 4.58f)
-                curveToRelative(0.39f, 0.39f, 1.02f, 0.39f, 1.41f, 0.0f)
-                curveToRelative(0.39f, -0.39f, 0.39f, -1.02f, 0.0f, -1.41f)
-                lineToRelative(-5.3f, -5.29f)
-                curveToRelative(-0.39f, -0.39f, -1.02f, -0.39f, -1.41f, 0.0f)
-                lineToRelative(-5.29f, 5.29f)
-                curveToRelative(-0.39f, 0.39f, -0.39f, 1.02f, 0.0f, 1.41f)
-                curveToRelative(0.39f, 0.39f, 1.02f, 0.39f, 1.41f, 0.0f)
+                moveTo(12f, 7f)
+                lineToRelative(8f, 8f)
+                lineTo(4f, 15f)
+                lineToRelative(8f, -8f)
                 close()
             }
         }.build()
 
+    /** Tactical Tapered Loop */
     val Refresh: ImageVector
         get() = ImageVector.Builder(
             name = "Refresh",
@@ -207,24 +229,26 @@ object MyIcons {
             viewportHeight = 24f
         ).apply {
             path(fill = SolidColor(Color.Black)) {
-                moveTo(17.65f, 6.35f)
-                curveTo(16.2f, 4.9f, 14.21f, 4.0f, 12.0f, 4.0f)
-                curveToRelative(-4.42f, 0.0f, -7.99f, 3.58f, -7.99f, 8.0f)
-                reflectiveCurveToRelative(3.57f, 8.0f, 7.99f, 8.0f)
-                curveToRelative(3.73f, 0.0f, 6.84f, -2.55f, 7.73f, -6.0f)
-                horizontalLineToRelative(-2.08f)
-                curveToRelative(-0.82f, 2.33f, -3.04f, 4.0f, -5.65f, 4.0f)
-                curveToRelative(-3.31f, 0.0f, -6.0f, -2.69f, -6.0f, -6.0f)
-                reflectiveCurveToRelative(2.69f, -6.0f, 6.0f, -6.0f)
-                curveToRelative(1.66f, 0.0f, 3.14f, 0.69f, 4.22f, 1.78f)
-                lineTo(13.0f, 11.0f)
-                horizontalLineToRelative(7.0f)
-                verticalLineTo(4.0f)
-                lineToRelative(-2.35f, 2.35f)
+                moveTo(12f, 4f)
+
+                curveTo(16.42f, 4f, 20f, 7.58f, 20f, 12f)
+                curveTo(20f, 16.42f, 16.42f, 20f, 12f, 20f)
+                curveTo(8.5f, 20f, 5.5f, 17.8f, 4.2f, 14.5f)
+
+                lineTo(1f, 14.5f)
+                lineTo(5.5f, 9f)
+                lineTo(10f, 14.5f)
+
+                lineTo(7.5f, 14.5f)
+                curveTo(8.5f, 16.5f, 10.1f, 17.5f, 12f, 17.5f)
+                curveTo(15f, 17.5f, 17.5f, 15f, 17.5f, 12f)
+                curveTo(17.5f, 9f, 15f, 6.5f, 12f, 6.5f)
+
                 close()
             }
         }.build()
 
+    /** Tactical Visor Pilot */
     val Person: ImageVector
         get() = ImageVector.Builder(
             name = "Person",
@@ -234,22 +258,33 @@ object MyIcons {
             viewportHeight = 24f
         ).apply {
             path(fill = SolidColor(Color.Black)) {
-                moveTo(12.0f, 12.0f)
-                curveToRelative(2.21f, 0.0f, 4.0f, -1.79f, 4.0f, -4.0f)
-                reflectiveCurveToRelative(-1.79f, -4.0f, -4.0f, -4.0f)
-                reflectiveCurveToRelative(-4.0f, 1.79f, -4.0f, 4.0f)
-                reflectiveCurveToRelative(1.79f, 4.0f, 4.0f, 4.0f)
+                // Helmet
+                moveTo(12f, 2f)
+                curveTo(9.24f, 2f, 7f, 4.24f, 7f, 7f)
+                curveToRelative(0f, 2.76f, 2.24f, 5f, 5f, 5f)
+                reflectiveCurveToRelative(5f, -2.24f, 5f, -5f)
+                curveToRelative(0f, -2.76f, -2.24f, -5f, -5f, -5f)
                 close()
-                moveTo(12.0f, 14.0f)
-                curveToRelative(-2.67f, 0.0f, -8.0f, 1.34f, -8.0f, 4.0f)
-                verticalLineToRelative(2.0f)
-                horizontalLineToRelative(16.0f)
-                verticalLineToRelative(-2.0f)
-                curveToRelative(0.0f, -2.66f, -5.33f, -4.0f, -12.0f, -4.0f)
+                // Visor line
+                moveTo(8f, 7.5f)
+                horizontalLineToRelative(8f)
+                verticalLineToRelative(1f)
+                horizontalLineTo(8f)
+                verticalLineTo(7.5f)
+                close()
+                // Shoulders
+                moveTo(4f, 16f)
+                curveToRelative(0f, -1.1f, 0.9f, -2f, 2f, -2f)
+                horizontalLineToRelative(12f)
+                curveToRelative(1.1f, 0f, 2f, 0.9f, 2f, 2f)
+                verticalLineToRelative(4f)
+                horizontalLineTo(4f)
+                verticalLineTo(16f)
                 close()
             }
         }.build()
 
+    /** Nova Technical Star */
     val Star: ImageVector
         get() = ImageVector.Builder(
             name = "Star",
@@ -259,18 +294,330 @@ object MyIcons {
             viewportHeight = 24f
         ).apply {
             path(fill = SolidColor(Color.Black)) {
-                moveTo(12.0f, 17.27f)
-                lineTo(18.18f, 21.0f)
-                lineToRelative(-1.64f, -7.03f)
-                lineTo(22.0f, 9.24f)
-                lineToRelative(-7.19f, -0.61f)
-                lineTo(12.0f, 2.0f)
-                lineTo(9.19f, 8.63f)
-                lineTo(2.0f, 9.24f)
-                lineToRelative(5.46f, 4.73f)
-                lineTo(5.82f, 21.0f)
-                lineTo(12.0f, 17.27f)
+                moveTo(12f, 2f)
+                lineToRelative(2.5f, 7.5f)
+                lineTo(22f, 12f)
+                lineToRelative(-7.5f, 2.5f)
+                lineTo(12f, 22f)
+                lineToRelative(-2.5f, -7.5f)
+                lineTo(2f, 12f)
+                lineToRelative(7.5f, -2.5f)
+                lineTo(12f, 2f)
+                close()
+                // Inner core
+                moveTo(12f, 9.5f)
+                lineToRelative(1f, 2.5f)
+                lineToRelative(2.5f, 1f)
+                lineToRelative(-2.5f, 1f)
+                lineToRelative(-1f, 2.5f)
+                lineToRelative(-1f, -2.5f)
+                lineToRelative(-2.5f, -1f)
+                lineToRelative(2.5f, -1f)
+                lineToRelative(1f, -2.5f)
                 close()
             }
         }.build()
+
+    /** Isometric History Stack */
+    val History: ImageVector
+        get() = ImageVector.Builder(
+            name = "History",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                // Stack of boards
+                moveTo(12f, 3f)
+                lineTo(3f, 8f)
+                lineToRelative(9f, 5f)
+                lineToRelative(9f, -5f)
+                lineToRelative(-9f, -5f)
+                close()
+                moveTo(3f, 11f)
+                lineToRelative(9f, 5f)
+                lineToRelative(9f, -5f)
+                verticalLineToRelative(2f)
+                lineToRelative(-9f, 5f)
+                lineToRelative(-9f, -5f)
+                verticalLineToRelative(-2f)
+                close()
+                // Clock overlay
+                moveTo(19f, 16f)
+                curveToRelative(-1.66f, 0f, -3f, 1.34f, -3f, 3f)
+                reflectiveCurveToRelative(1.34f, 3f, 3f, 3f)
+                reflectiveCurveToRelative(3f, -1.34f, 3f, -3f)
+                reflectiveCurveToRelative(-1.34f, -3f, -3f, -3f)
+                close()
+                moveTo(19f, 18f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(1f)
+                verticalLineToRelative(0.5f)
+                horizontalLineToRelative(-1.5f)
+                verticalLineTo(18f)
+                horizontalLineTo(19f)
+                close()
+            }
+        }.build()
+
+    /** Tech-Gear Settings */
+    val Settings: ImageVector
+        get() = ImageVector.Builder(
+            name = "Settings",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                // Outer Hex-Gear
+                moveTo(12f, 1f)
+                lineToRelative(-3.5f, 2f)
+                lineTo(5f, 3f)
+                verticalLineToRelative(4f)
+                lineToRelative(-3f, 2f)
+                verticalLineToRelative(6f)
+                lineToRelative(3f, 2f)
+                verticalLineToRelative(4f)
+                horizontalLineToRelative(3.5f)
+                lineToRelative(3.5f, 2f)
+                lineToRelative(3.5f, -2f)
+                horizontalLineTo(19f)
+                verticalLineToRelative(-4f)
+                lineToRelative(3f, -2f)
+                verticalLineTo(9f)
+                lineToRelative(-3f, -2f)
+                verticalLineTo(3f)
+                horizontalLineToRelative(-3.5f)
+                lineTo(12f, 1f)
+                close()
+                
+                // Central Hollow (creates a gear look)
+                moveTo(12f, 15.5f)
+                curveToRelative(-1.93f, 0f, -3.5f, -1.57f, -3.5f, -3.5f)
+                reflectiveCurveToRelative(1.57f, -3.5f, 3.5f, -3.5f)
+                reflectiveCurveToRelative(3.5f, 1.57f, 3.5f, 3.5f)
+                reflectiveCurveToRelative(-1.57f, 3.5f, -3.5f, 3.5f)
+                close()
+                
+                // Core Pin
+                moveTo(12f, 10.5f)
+                curveToRelative(-0.83f, 0f, -1.5f, 0.67f, -1.5f, 1.5f)
+                reflectiveCurveToRelative(0.67f, 1.5f, 1.5f, 1.5f)
+                reflectiveCurveToRelative(1.5f, -0.67f, 1.5f, -1.5f)
+                reflectiveCurveToRelative(-0.67f, -1.5f, -1.5f, -1.5f)
+                close()
+            }
+        }.build()
+
+    /** Solid Tech Info */
+    val Info: ImageVector
+        get() = ImageVector.Builder(
+            name = "Info",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                // Circle outline
+                moveTo(12f, 2f)
+                curveTo(6.5f, 2f, 2f, 6.5f, 2f, 12f)
+                reflectiveCurveToRelative(4.5f, 10f, 10f, 10f)
+                reflectiveCurveToRelative(10f, -4.5f, 10f, -10f)
+                reflectiveCurveTo(17.5f, 2f, 12f, 2f)
+                close()
+                // The "i" as a cutout
+                moveTo(11f, 7f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(-2f)
+                verticalLineTo(7f)
+                close()
+                moveTo(11f, 10f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(7f)
+                horizontalLineToRelative(-2f)
+                verticalLineTo(10f)
+                close()
+            }
+        }.build()
+
+    /** Bold Play Triangle */
+    val PlayArrow: ImageVector
+        get() = ImageVector.Builder(
+            name = "PlayArrow",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(7f, 4f)
+                verticalLineToRelative(16f)
+                lineToRelative(13f, -8f)
+                lineTo(7f, 4f)
+                close()
+                // Motion tail
+                moveTo(4f, 6f)
+                horizontalLineToRelative(1.5f)
+                verticalLineToRelative(12f)
+                lineTo(4f, 18f)
+                verticalLineTo(6f)
+                close()
+            }
+        }.build()
+
+    /** Bold Tactical Plus */
+    val Add: ImageVector
+        get() = ImageVector.Builder(
+            name = "Add",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(19f, 11f)
+                horizontalLineToRelative(-6f)
+                verticalLineTo(5f)
+                horizontalLineToRelative(-2f)
+                verticalLineToRelative(6f)
+                horizontalLineTo(5f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(6f)
+                verticalLineToRelative(6f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(-6f)
+                horizontalLineToRelative(6f)
+                verticalLineToRelative(-2f)
+                close()
+            }
+        }.build()
+
+    /** Bold Tactical Minus */
+    val Remove: ImageVector
+        get() = ImageVector.Builder(
+            name = "Remove",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(19f, 11f)
+                horizontalLineTo(5f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(14f)
+                verticalLineToRelative(-2f)
+                close()
+            }
+        }.build()
+
+    /** Solid Tech Base */
+    val Home: ImageVector
+        get() = ImageVector.Builder(
+            name = "Home",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(10.0f, 20.0f)
+                verticalLineToRelative(-6.0f)
+                horizontalLineToRelative(4.0f)
+                verticalLineToRelative(6.0f)
+                horizontalLineToRelative(5.0f)
+                verticalLineToRelative(-8.0f)
+                horizontalLineToRelative(3.0f)
+                lineTo(12.0f, 3.0f)
+                lineTo(2.0f, 12.0f)
+                horizontalLineToRelative(3.0f)
+                verticalLineToRelative(8.0f)
+                close()
+            }
+        }.build()
+
+    /** Clean Tactical Back Arrow */
+    val ArrowBack: ImageVector
+        get() = ImageVector.Builder(
+            name = "ArrowBack",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(21f, 11f)
+                horizontalLineTo(6.8f)
+                lineToRelative(4.6f, -4.6f)
+                lineTo(10f, 5f)
+                lineToRelative(-7f, 7f)
+                lineToRelative(7f, 7f)
+                lineToRelative(1.4f, -1.4f)
+                lineTo(6.8f, 13f)
+                horizontalLineTo(21f)
+                verticalLineToRelative(-2f)
+                close()
+            }
+        }.build()
+}
+
+
+@Composable
+fun IconPreviewList() {
+    val icons = listOf(
+        "JumpToLast" to MyIcons.JumpToLast,
+        "Layers" to MyIcons.Layers,
+        "Pause" to MyIcons.Pause,
+        "Face" to MyIcons.Face,
+        "KeyboardArrowDown" to MyIcons.KeyboardArrowDown,
+        "KeyboardArrowUp" to MyIcons.KeyboardArrowUp,
+        "Refresh" to MyIcons.Refresh,
+        "Person" to MyIcons.Person,
+        "Star" to MyIcons.Star,
+        "History" to MyIcons.History,
+        "Settings" to MyIcons.Settings,
+        "Info" to MyIcons.Info,
+        "PlayArrow" to MyIcons.PlayArrow,
+        "Add" to MyIcons.Add,
+        "Remove" to MyIcons.Remove,
+        "Home" to MyIcons.Home,
+        "ArrowBack" to MyIcons.ArrowBack
+    )
+
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(100.dp),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(icons) { (name, icon) ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = name,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun IconPreviewListPreview() {
+    MaterialTheme {
+        IconPreviewList()
+    }
 }

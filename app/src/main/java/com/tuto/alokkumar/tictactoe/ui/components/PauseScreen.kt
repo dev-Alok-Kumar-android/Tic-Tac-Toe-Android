@@ -14,10 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -100,7 +96,7 @@ fun PauseScreen(
                             modifier = Modifier.size(sideIconSize)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Home,
+                                imageVector = MyIcons.Home,
                                 contentDescription = "Home",
                                 modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
@@ -112,7 +108,7 @@ fun PauseScreen(
                             modifier = Modifier.size(sideIconSize)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Settings,
+                                imageVector = MyIcons.Settings,
                                 contentDescription = "Settings",
                                 modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
@@ -144,7 +140,7 @@ fun PauseScreen(
                             modifier = Modifier.size(playSize)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.PlayArrow,
+                                imageVector = MyIcons.PlayArrow,
                                 contentDescription = "Resume Game",
                                 modifier = Modifier.size(playInnerSize),
                                 tint = MaterialTheme.colorScheme.primary
@@ -172,7 +168,7 @@ fun PauseScreen(
                         modifier = Modifier.size(180.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.PlayArrow,
+                            imageVector = MyIcons.PlayArrow,
                             contentDescription = "Resume Game",
                             modifier = Modifier.size(160.dp),
                             tint = MaterialTheme.colorScheme.primary
@@ -203,7 +199,7 @@ fun PauseScreen(
                             modifier = Modifier.size(portraitIconSize)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Home,
+                                imageVector = MyIcons.Home,
                                 contentDescription = "Home",
                                 modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
@@ -215,7 +211,7 @@ fun PauseScreen(
                             modifier = Modifier.size(portraitIconSize)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Settings,
+                                imageVector = MyIcons.Settings,
                                 contentDescription = "Settings",
                                 modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
