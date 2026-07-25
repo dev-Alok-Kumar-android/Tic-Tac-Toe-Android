@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -89,7 +88,7 @@ fun PauseScreen(
                             modifier = Modifier.size(sideIconSize)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Refresh,
+                                imageVector = MyIcons.Refresh,
                                 contentDescription = "Restart",
                                 modifier = Modifier.size(sideInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground
@@ -192,7 +191,7 @@ fun PauseScreen(
                             modifier = Modifier.size(portraitIconSize)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Refresh,
+                                imageVector = MyIcons.Refresh,
                                 contentDescription = "Restart",
                                 modifier = Modifier.size(portraitInnerIconSize),
                                 tint = MaterialTheme.colorScheme.onBackground

@@ -21,13 +21,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuto.alokkumar.tictactoe.data.AppTheme
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.GameMode
@@ -48,19 +49,19 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = SettingsViewModel(),
+    viewModel: SettingsViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
-    val selectedGameMode by viewModel.selectedGameMode.collectAsState()
-    val isImmersiveMode by viewModel.immersiveMode.collectAsState()
-    val bgmEnabled by viewModel.bgmEnabled.collectAsState()
-    val themeDark by viewModel.theme.collectAsState()
-    val soundEnabled by viewModel.soundEnabled.collectAsState()
-    val dynamicColor by viewModel.dynamicColor.collectAsState()
-    val boardSize by viewModel.boardSize.collectAsState()
-    val bgAnimationEnabled by viewModel.bgAnimationEnabled.collectAsState()
-    val boardStyle by viewModel.boardStyle.collectAsState()
-    val orientation by viewModel.orientation.collectAsState()
+    val selectedGameMode by viewModel.selectedGameMode.collectAsStateWithLifecycle()
+    val isImmersiveMode by viewModel.immersiveMode.collectAsStateWithLifecycle()
+    val bgmEnabled by viewModel.bgmEnabled.collectAsStateWithLifecycle()
+    val themeDark by viewModel.theme.collectAsStateWithLifecycle()
+    val soundEnabled by viewModel.soundEnabled.collectAsStateWithLifecycle()
+    val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
+    val boardSize by viewModel.boardSize.collectAsStateWithLifecycle()
+    val bgAnimationEnabled by viewModel.bgAnimationEnabled.collectAsStateWithLifecycle()
+    val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
+    val orientation by viewModel.orientation.collectAsStateWithLifecycle()
     
     val context = LocalContext.current
     val version = remember(context) {

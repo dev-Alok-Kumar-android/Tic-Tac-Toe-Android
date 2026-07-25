@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -66,7 +62,7 @@ fun ScoreBoard(
                 title = "Player X",
                 score = xWins,
                 color = MaterialTheme.colorScheme.secondary,
-                icon = Icons.Default.Person
+                icon = MyIcons.Person
             )
             
             VerticalDivider(
@@ -78,7 +74,7 @@ fun ScoreBoard(
                 title = "Draws",
                 score = draws,
                 color = MaterialTheme.colorScheme.outline,
-                icon = Icons.Default.Star
+                icon = MyIcons.Star
             )
             
             VerticalDivider(
@@ -90,7 +86,7 @@ fun ScoreBoard(
                 title = "Player O",
                 score = oWins,
                 color = MaterialTheme.colorScheme.tertiary,
-                icon = Icons.Default.Face
+                icon = MyIcons.Face
             )
         }
     }

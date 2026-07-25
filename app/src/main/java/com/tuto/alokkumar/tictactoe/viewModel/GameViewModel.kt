@@ -1,16 +1,19 @@
 package com.tuto.alokkumar.tictactoe.viewModel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.tuto.alokkumar.tictactoe.core.pref.Preferences
-import com.tuto.alokkumar.tictactoe.core.sound.Sound
+import androidx.navigation.toRoute
+import com.tuto.alokkumar.tictactoe.Route
+import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
+import com.tuto.alokkumar.tictactoe.core.sound.SoundManager
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.data.GameState
 import com.tuto.alokkumar.tictactoe.domain.GameLogic
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,22 +23,26 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * State holding ViewModel for the active gameplay session.
  *
  * Orchestrates communication between [GameLogic] and UI, handles AI move delays,
  * triggers sound effects, and manages persistence of completed matches into history.
- *
- * @param gameMode Selected difficulty/mode for this session.
- * @param boardSize Requested dimensions for the grid.
- * @param loadHistory Optional previous state used to resume a specific match.
  */
-class GameViewModel(
-    private val gameMode: GameMode = GameMode.PVP,
-    private val boardSize: BoardSize = BoardSize(),
-    loadHistory: GameHistory? = null
+@HiltViewModel
+class GameViewModel @Inject constructor(
+    private val preferences: PreferencesManager,
+    private val soundManager: SoundManager,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val route = try { savedStateHandle.toRoute<Route.Game>() } catch (_: Exception) { null }
+    
+    private val gameMode: GameMode = route?.mode ?: GameMode.PVP
+    private val boardSize: BoardSize = BoardSize() // Default for now, or get from prefs/args
 
     private val logic = GameLogic(gameMode, boardSize)
 
@@ -59,23 +66,17 @@ class GameViewModel(
     val activeLayer = _activeLayer.asStateFlow()
 
     /** Flow emitting whether background animations are enabled globally. */
-    val bgAnimationEnabled = Preferences.bgAnimationEnabledFlow.stateIn(
+    val bgAnimationEnabled = preferences.bgAnimationEnabledFlow.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), false
     )
 
     /** Flow emitting the current board render style preference. */
-    val boardStyle = Preferences.boardStyleFlow.stateIn(
+    val boardStyle = preferences.boardStyleFlow.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), BoardStyle.CLASSIC
     )
 
     init {
-        if (loadHistory != null) {
-            _state.value = loadHistory.state
-            logic.gameMode = loadHistory.mode
-            logic.setBoard(loadHistory.state.board, loadHistory.state.currentPlayer)
-        } else {
-            updateState()
-        }
+        updateState()
     }
 
     /** Updates the visible 2D layer index for 3D playboards. */
@@ -97,13 +98,13 @@ class GameViewModel(
         if (current.winner != null || current.board[index] != null) return
 
         if (logic.makeMove(index)) {
-            Sound.play("move")
+            soundManager.playSound("move")
             checkAndHandleResult()
             
             if (logic.winner == null && gameMode != GameMode.PVP && logic.currentPlayer == 'O') {
                 viewModelScope.launch {
                     _isAiThinking.value = true
-                    delay(500L)
+                    delay(500.milliseconds)
                     aiMove()
                     _isAiThinking.value = false
                 }
@@ -118,7 +119,7 @@ class GameViewModel(
             }
             if (move != null) {
                 logic.makeMove(move)
-                Sound.play("move")
+                soundManager.playSound("move")
                 checkAndHandleResult()
             }
         }
@@ -130,9 +131,9 @@ class GameViewModel(
 
         if (winner != null) {
             when (winner) {
-                'X' -> Sound.play("win")
-                'O' -> Sound.play("lose")
-                'D' -> Sound.play("draw")
+                'X' -> soundManager.playSound("win")
+                'O' -> soundManager.playSound("lose")
+                'D' -> soundManager.playSound("draw")
             }
         }
 
@@ -168,7 +169,7 @@ class GameViewModel(
     /** Persists current match snapshot into the persistent history DataStore. */
     fun saveHistory() {
         viewModelScope.launch {
-            Preferences.addGameHistory(
+            preferences.addGameHistory(
                 GameHistory(
                     dateMillis = Date().time,
                     mode = gameMode,
@@ -188,18 +189,15 @@ class GameViewModel(
             lastMove = logic.lastMove
         )
     }
-}
 
-/**
- * Factory class used to inject runtime session parameters into [GameViewModel].
- */
-class GameViewModelFactory(
-    private val mode: GameMode,
-    private val boardSize: BoardSize,
-    private val loadHistory: GameHistory? = null
-) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return GameViewModel(mode, boardSize, loadHistory) as T
+    /**
+     * Restore game from history.
+     */
+    fun loadFromHistory(history: GameHistory) {
+        _state.value = history.state
+        logic.gameMode = history.mode
+        logic.setBoard(history.state.board, history.state.currentPlayer)
+        _activeLayer.value = 0
     }
 }
+

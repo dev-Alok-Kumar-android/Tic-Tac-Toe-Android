@@ -7,25 +7,20 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.tuto.alokkumar.tictactoe.core.pref.Preferences
-import com.tuto.alokkumar.tictactoe.core.sound.Sound
-import com.tuto.alokkumar.tictactoe.data.AppTheme
-import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.data.Orientation
@@ -37,49 +32,38 @@ import com.tuto.alokkumar.tictactoe.ui.screens.MenuScreen
 import com.tuto.alokkumar.tictactoe.ui.screens.SettingsScreen
 import com.tuto.alokkumar.tictactoe.ui.theme.TicTacToeTheme
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModel
-import com.tuto.alokkumar.tictactoe.viewModel.GameViewModelFactory
-import kotlinx.coroutines.launch
+import com.tuto.alokkumar.tictactoe.viewModel.SettingsViewModel
 
 /**
  * Top-level Navigation Graph for the Tic Tac Toe application.
- *
- * Defines all application routes (Menu, Game, Settings, History, About) and handles global
- * side-effects including:
- * 1. **Background Music**: Starts/stops based on persistent user preferences.
- * 2. **Immersive Mode**: Toggles system UI bars visibility for full-screen gameplay.
- * 3. **Theming**: Dynamically wraps the entire UI in [TicTacToeTheme] based on selected user settings.
- *
- * @param modifier Modifier to be applied to the navigation layout container.
  */
 @Composable
-fun AppNavigation(modifier: Modifier = Modifier) {
+fun AppNavigation(
+    modifier: Modifier = Modifier,
+    settingsViewModel: SettingsViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val isBgmEnabled by Preferences.bgmEnabledFlow.collectAsState(initial = false)
-    val mode by Preferences.gameModeFlow.collectAsState(initial = GameMode.HARD)
-    val boardSize by Preferences.boardSizeFlow.collectAsState(initial = BoardSize())
-    val isSoundEnabled by Preferences.soundEnabledFlow.collectAsState(initial = false)
-    val isImmersiveMode by Preferences.immersiveFlow.collectAsState(initial = false)
-    val orientationPreference by Preferences.orientationFlow.collectAsState(initial = Orientation.SYSTEM)
-    val theme by Preferences.themeFlow.collectAsState(initial = AppTheme.SYSTEM)
-    val dynamicColor by Preferences.dynamicColorFlow.collectAsState(initial = false)
-    val histories by Preferences.getGameHistoryFlow().collectAsState(initial = emptyList())
+    
+    val isBgmEnabled by settingsViewModel.bgmEnabled.collectAsStateWithLifecycle()
+    val mode by settingsViewModel.selectedGameMode.collectAsStateWithLifecycle()
+    val isImmersiveMode by settingsViewModel.immersiveMode.collectAsStateWithLifecycle()
+    val orientationPreference by settingsViewModel.orientation.collectAsStateWithLifecycle()
+    val theme by settingsViewModel.theme.collectAsStateWithLifecycle()
+    val dynamicColor by settingsViewModel.dynamicColor.collectAsStateWithLifecycle()
+    
     var selectedHistory: GameHistory? by remember { mutableStateOf(null) }
     val lifecycleOwner = LocalLifecycleOwner.current
-
-    // Synchronize global sound states with persistent settings
-    Sound.setBgmEnabled(isBgmEnabled)
-    Sound.setSoundEnabled(isSoundEnabled)
 
     DisposableEffect(lifecycleOwner, isBgmEnabled) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    if (isBgmEnabled) Sound.playBgm(context)
+                    if (isBgmEnabled) settingsViewModel.playBgm(context)
                 }
                 Lifecycle.Event.ON_PAUSE -> {
-                    Sound.pauseBgm()
+                    settingsViewModel.pauseBgm()
                 }
                 else -> Unit
             }
@@ -104,70 +88,58 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     }
 
     TicTacToeTheme(appTheme = theme, dynamicColor = dynamicColor) {
-        NavHost(navController, startDestination = "menu") {
+        NavHost(navController, startDestination = Route.Menu) {
 
             // Main Hub
-            composable("menu") {
+            composable<Route.Menu> {
                 MenuScreen(
-                    onStartGame = { navController.navigate("game/${mode.name}") },
-                    onViewStats = { navController.navigate("history") },
+                    onStartGame = { navController.navigate(Route.Game(mode)) },
+                    onViewStats = { navController.navigate(Route.History) },
                     onExit = { activity?.finish() },
-                    onPvpMode = { navController.navigate("game/${GameMode.PVP.name}") },
-                    onSettings = { navController.navigate("settings") },
-                    onAbout = { navController.navigate("about") })
+                    onPvpMode = { navController.navigate(Route.Game(GameMode.PVP)) },
+                    onSettings = { navController.navigate(Route.Settings) },
+                    onAbout = { navController.navigate(Route.About) })
             }
 
             // Standard New Match Route
-            composable("game/{mode}") { backStackEntry ->
-                val modeString = backStackEntry.arguments?.getString("mode") ?: "HARD"
-                val gameMode = try {
-                    GameMode.valueOf(modeString.uppercase())
-                } catch (_: Exception) {
-                    GameMode.HARD
-                }
-
+            composable<Route.Game> {
                 GameScreen(
-                    mode = gameMode,
-                    boardSize = boardSize,
                     onHome = {
-                        navController.navigate("menu") {
-                            popUpTo("menu") {
-                                inclusive = true
-                            }
+                        navController.navigate(Route.Menu) {
+                            popUpTo(Route.Menu) { inclusive = true }
                         }
-                    }, onSettings = { navController.navigate("settings") }, modifier = modifier
+                    }, 
+                    onSettings = { navController.navigate(Route.Settings) }, 
+                    modifier = modifier
                 )
             }
 
             // Restore/Replay Past Match Route
-            composable("game/restore") {
-                val context = LocalContext.current
+            composable<Route.RestoreGame> {
                 val currentHistory = selectedHistory
                 
                 LaunchedEffect(currentHistory) {
                     if (currentHistory == null) {
                         Toast.makeText(context, "No game to restore", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Restored Game", Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 if (currentHistory == null) return@composable
 
-                val gameMode = currentHistory.mode
-                val gameViewModel: GameViewModel = viewModel(
-                    factory = GameViewModelFactory(gameMode, currentHistory.state.boardSize, currentHistory)
-                )
+                val gameViewModel: GameViewModel = hiltViewModel()
+                
+                // Manually load history into ViewModel
+                LaunchedEffect(currentHistory) {
+                    gameViewModel.loadFromHistory(currentHistory)
+                }
+
                 GameScreen(
-                    mode = gameMode,
-                    boardSize = currentHistory.state.boardSize,
-                    loadHistory = currentHistory,
                     onHome = {
-                        navController.navigate("menu") {
-                            popUpTo("menu") { inclusive = true }
+                        navController.navigate(Route.Menu) {
+                            popUpTo(Route.Menu) { inclusive = true }
                         }
                     },
-                    onSettings = { navController.navigate("settings") },
+                    onSettings = { navController.navigate(Route.Settings) },
                     modifier = modifier,
                     viewModel = gameViewModel
                 )
@@ -175,30 +147,21 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
 
             // Past Match Logs
-            composable("history") {
-                val scope = rememberCoroutineScope()
+            composable<Route.History> {
                 HistoryScreen(
-                    histories,
-                    onClear = { scope.launch { Preferences.clearAllGameHistory() } },
                     onItemClick = {
                         selectedHistory = it
-                        navController.navigate("game/restore")
-
-                    },
-                    onItemClear = {
-                        scope.launch {
-                            Preferences.removeGameHistory(it)
-                        }
-                    })
+                        navController.navigate(Route.RestoreGame)
+                    }
+                )
             }
 
             // Configuration Panels
-            composable("settings") {
-                SettingsScreen(
-                    onBack = { navController.popBackStack() })
+            composable<Route.Settings> {
+                SettingsScreen(onBack = { navController.popBackStack() })
             }
 
-            composable("about") {
+            composable<Route.About> {
                 AboutScreen(onBack = { navController.popBackStack() })
             }
 

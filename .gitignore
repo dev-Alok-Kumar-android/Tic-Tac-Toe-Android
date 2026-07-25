@@ -10,3 +10,4 @@ externalNativeBuild/
 captures/
 .DS_Store
 Thumbs.db
+/.artifacts/

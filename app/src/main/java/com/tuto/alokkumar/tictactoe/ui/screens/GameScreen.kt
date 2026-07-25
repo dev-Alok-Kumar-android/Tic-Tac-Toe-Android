@@ -26,9 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,7 +38,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,14 +48,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
-import com.tuto.alokkumar.tictactoe.data.GameHistory
-import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.data.GameState
 import com.tuto.alokkumar.tictactoe.ui.components.AnimatedLinesBackground
 import com.tuto.alokkumar.tictactoe.ui.components.GameBoard
@@ -69,7 +64,6 @@ import com.tuto.alokkumar.tictactoe.ui.components.PauseScreen
 import com.tuto.alokkumar.tictactoe.ui.components.ScoreBoard
 import com.tuto.alokkumar.tictactoe.ui.theme.TicTacToeTheme
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModel
-import com.tuto.alokkumar.tictactoe.viewModel.GameViewModelFactory
 
 /**
  * Main game execution screen.
@@ -78,9 +72,6 @@ import com.tuto.alokkumar.tictactoe.viewModel.GameViewModelFactory
  * when the application is minimized or stopped in background), and overrides system back button presses.
  *
  * @param modifier Modifier applied to the outer layout container.
- * @param mode GameMode setting (PvP or AI difficulty settings).
- * @param boardSize Dimensions configuration.
- * @param loadHistory Optional saved history payload used to resume ongoing matches.
  * @param onHome Callback trigger to navigate back to Menu.
  * @param onSettings Callback trigger to navigate to Settings.
  * @param viewModel State holding view model instance.
@@ -89,21 +80,16 @@ import com.tuto.alokkumar.tictactoe.viewModel.GameViewModelFactory
 @Composable
 fun GameScreen(
     modifier: Modifier = Modifier,
-    mode: GameMode = GameMode.PVP,
-    boardSize: BoardSize = BoardSize(),
-    loadHistory: GameHistory? = null,
     onHome: () -> Unit = {},
     onSettings: () -> Unit = {},
-    viewModel: GameViewModel = viewModel(
-        factory = GameViewModelFactory(mode, boardSize, loadHistory)
-    ),
+    viewModel: GameViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
-    val isAiThinking by viewModel.isAiThinking.collectAsState()
-    val isPaused by viewModel.isPaused.collectAsState()
-    val activeLayer by viewModel.activeLayer.collectAsState()
-    val bgAnimationEnabled by viewModel.bgAnimationEnabled.collectAsState()
-    val boardStyle by viewModel.boardStyle.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val isAiThinking by viewModel.isAiThinking.collectAsStateWithLifecycle()
+    val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
+    val activeLayer by viewModel.activeLayer.collectAsStateWithLifecycle()
+    val bgAnimationEnabled by viewModel.bgAnimationEnabled.collectAsStateWithLifecycle()
+    val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     BackHandler(enabled = true) {
@@ -154,9 +140,9 @@ fun GameContent(
     onCellClick: (Int) -> Unit,
     onHome: () -> Unit,
     onSettings: () -> Unit,
+    modifier: Modifier = Modifier,
     bgAnimationEnabled: Boolean = false,
     boardStyle: BoardStyle = BoardStyle.CLASSIC,
-    modifier: Modifier = Modifier
 ) {
     Scaffold { padding ->
         BoxWithConstraints(
@@ -363,7 +349,7 @@ fun LayerSelector(
                     leadingIcon = if (isSelected) {
                         {
                             Icon(
-                                imageVector = Icons.Rounded.PlayArrow,
+                                imageVector = Icons.Default.PlayArrow,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -389,7 +375,7 @@ fun LayerSelector(
                 onClick = { if (selected > 0) onSelect(selected - 1) },
                 enabled = selected > 0
             ) {
-                Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Layer Down")
+                Icon(MyIcons.KeyboardArrowDown, contentDescription = "Layer Down")
             }
 
             // Central Info Button & List Opener
@@ -468,7 +454,7 @@ fun LayerSelector(
                 onClick = { if (selected < count - 1) onSelect(selected + 1) },
                 enabled = selected < count - 1
             ) {
-                Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = "Layer Up")
+                Icon(MyIcons.KeyboardArrowUp, contentDescription = "Layer Up")
             }
 
             // Quick Jump to Last Played

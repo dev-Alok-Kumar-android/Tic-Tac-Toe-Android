@@ -25,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.ui.components.NumberPicker
@@ -60,10 +60,10 @@ fun MenuScreen(
     onAbout: () -> Unit = {},
     onSettings: () -> Unit,
     onPvpMode: () -> Unit = {},
-    viewModel: MenuViewModel = viewModel()
+    viewModel: MenuViewModel = hiltViewModel()
 ) {
-    val boardSize by viewModel.boardSize.collectAsState()
-    val boardStyle by viewModel.boardStyle.collectAsState()
+    val boardSize by viewModel.boardSize.collectAsStateWithLifecycle()
+    val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
 
     MenuScreenContent(
         boardSize = boardSize,

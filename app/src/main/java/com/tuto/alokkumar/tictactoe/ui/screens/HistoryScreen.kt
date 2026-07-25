@@ -18,11 +18,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuto.alokkumar.tictactoe.data.GameHistory
+import com.tuto.alokkumar.tictactoe.viewModel.HistoryViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -32,45 +37,43 @@ import java.util.Locale
  * Displays match statistics, timestamps, and game difficulty modes. Long-pressing items opens
  * deletion confirmation alerts.
  *
- * @param histories List of persisted history match items.
- * @param onClear Callback action clearing the entire history collection.
+ * @param viewModel Attached history state view model.
  * @param onItemClick Callback action resuming/viewing selected history snapshot.
- * @param onItemClear Callback action deleting a singular history item.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    histories: List<GameHistory>,
-    onClear: () -> Unit,
+    viewModel: HistoryViewModel = hiltViewModel(),
     onItemClick: (GameHistory) -> Unit,
-    onItemClear: (GameHistory) -> Unit = {},
 ) {
-    val showDialog = remember { mutableStateOf<Pair<Boolean, GameHistory?>>(Pair(false, null)) }
+    val histories by viewModel.history.collectAsStateWithLifecycle()
+    var showDialogItem by remember { mutableStateOf<GameHistory?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Game History") }, actions = {
                 if (histories.isNotEmpty()) {
-                    TextButton(onClick = onClear) {
+                    TextButton(onClick = { viewModel.clearHistory() }) {
                         Text("Clear All", color = MaterialTheme.colorScheme.error)
                     }
                 }
             })
         }) { inner ->
 
-        if (showDialog.value.first) {
+        if (showDialogItem != null) {
             AlertDialog(
-                onDismissRequest = { showDialog.value = Pair(false, null) },
+                onDismissRequest = { showDialogItem = null },
                 title = { Text("Clear History") },
-                text = { Text("Are you sure you want to clear the history?") },
+                text = { Text("Are you sure you want to clear this entry?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        onItemClear(showDialog.value.second ?: return@TextButton)
-                        showDialog.value = Pair(false, null)
+                        val item = showDialogItem ?: return@TextButton
+                        viewModel.removeHistory(item)
+                        showDialogItem = null
                     }) {
                         Text("Yes", color = MaterialTheme.colorScheme.error)
                     }
-                    TextButton(onClick = { showDialog.value = Pair(false, null) }) {
+                    TextButton(onClick = { showDialogItem = null }) {
                         Text("No", color = MaterialTheme.colorScheme.onSurface)
                     }
                 })
@@ -99,7 +102,7 @@ fun HistoryScreen(
                             .fillMaxWidth()
                             .combinedClickable(
                                 onClick = { onItemClick(item) },
-                                onLongClick = { showDialog.value = Pair(true, item) })
+                                onLongClick = { showDialogItem = item })
                     )
                     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                 }
