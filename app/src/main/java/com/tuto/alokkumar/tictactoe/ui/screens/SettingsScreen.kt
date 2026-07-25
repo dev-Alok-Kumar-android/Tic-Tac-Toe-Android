@@ -27,9 +27,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuto.alokkumar.tictactoe.data.AppLanguage
 import com.tuto.alokkumar.tictactoe.data.AppTheme
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
+import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.GameMode
+import com.tuto.alokkumar.tictactoe.data.NextMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.Orientation
 import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 import com.tuto.alokkumar.tictactoe.ui.components.NumberPicker
@@ -61,6 +64,9 @@ fun SettingsScreen(
     val bgAnimationEnabled by viewModel.bgAnimationEnabled.collectAsStateWithLifecycle()
     val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
     val orientation by viewModel.orientation.collectAsStateWithLifecycle()
+    val firstMoveBehavior by viewModel.firstMoveBehavior.collectAsStateWithLifecycle()
+    val nextMoveBehavior by viewModel.nextMoveBehavior.collectAsStateWithLifecycle()
+    val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     
     val context = LocalContext.current
     val version = remember(context) {
@@ -94,6 +100,10 @@ fun SettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             SettingSelector(Modifier, "Difficulty", GameMode.entries, selectedGameMode) { viewModel.setGameMode(it as GameMode) }
+
+            SettingSelector(Modifier, "First Move", FirstMoveBehavior.entries, firstMoveBehavior) { viewModel.setFirstMoveBehavior(it as FirstMoveBehavior) }
+
+            SettingSelector(Modifier, "Next Game Start", NextMoveBehavior.entries, nextMoveBehavior) { viewModel.setNextMoveBehavior(it as NextMoveBehavior) }
 
             SettingSelector(Modifier, "Board Style", BoardStyle.entries, boardStyle) { viewModel.setBoardStyle(it as BoardStyle) }
 
@@ -134,6 +144,8 @@ fun SettingsScreen(
             }
 
             HorizontalDivider()
+
+            SettingSelector(Modifier, "Language", AppLanguage.entries, appLanguage) { viewModel.setLanguage(it as AppLanguage) }
 
             SettingSelector(Modifier, "Theme", AppTheme.entries, themeDark) { viewModel.setTheme(it as AppTheme)}
             SettingSelector(Modifier, "Orientation", Orientation.entries, orientation) { viewModel.setOrientation(it as Orientation) }

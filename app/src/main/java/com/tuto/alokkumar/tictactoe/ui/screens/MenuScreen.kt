@@ -44,6 +44,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
+import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 import com.tuto.alokkumar.tictactoe.ui.components.NumberPicker
@@ -57,31 +58,34 @@ import com.tuto.alokkumar.tictactoe.viewModel.MenuViewModel
  */
 @Composable
 fun MenuScreen(
-    onStartGame: () -> Unit,
+    onStartGame: (GameMode, BoardSize) -> Unit,
     onViewStats: () -> Unit,
     onExit: () -> Unit,
     onAbout: () -> Unit = {},
     onSettings: () -> Unit,
-    onPvpMode: () -> Unit = {},
+    onPvpMode: (BoardSize) -> Unit,
     viewModel: MenuViewModel = hiltViewModel()
 ) {
     val boardSize by viewModel.boardSize.collectAsStateWithLifecycle()
     val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
     val gameMode by viewModel.gameMode.collectAsStateWithLifecycle()
+    val firstMoveBehavior by viewModel.firstMoveBehavior.collectAsStateWithLifecycle()
 
     MenuScreenContent(
         boardSize = boardSize,
         boardStyle = boardStyle,
         gameMode = gameMode,
-        onStartGame = onStartGame,
+        firstMoveBehavior = firstMoveBehavior,
+        onStartGame = { onStartGame(gameMode, boardSize) },
         onViewStats = onViewStats,
         onExit = onExit,
         onAbout = onAbout,
         onSettings = onSettings,
-        onPvpMode = onPvpMode,
+        onPvpMode = { onPvpMode(boardSize) },
         onBoardSizeChange = { size -> viewModel.setBoardSize(size) },
         onBoardStyleChange = { viewModel.setBoardStyle(it) },
-        onGameModeChange = { viewModel.setGameMode(it) }
+        onGameModeChange = { viewModel.setGameMode(it) },
+        onFirstMoveBehaviorChange = { viewModel.setFirstMoveBehavior(it) }
     )
 }
 
@@ -90,6 +94,7 @@ fun MenuScreenContent(
     boardSize: BoardSize,
     boardStyle: BoardStyle,
     gameMode: GameMode,
+    firstMoveBehavior: FirstMoveBehavior,
     onStartGame: () -> Unit,
     onViewStats: () -> Unit,
     onExit: () -> Unit,
@@ -98,7 +103,8 @@ fun MenuScreenContent(
     onPvpMode: () -> Unit,
     onBoardSizeChange: (BoardSize) -> Unit,
     onBoardStyleChange: (BoardStyle) -> Unit,
-    onGameModeChange: (GameMode) -> Unit
+    onGameModeChange: (GameMode) -> Unit,
+    onFirstMoveBehaviorChange: (FirstMoveBehavior) -> Unit
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -178,9 +184,11 @@ fun MenuScreenContent(
                             boardSize = boardSize,
                             boardStyle = boardStyle,
                             selectedGameMode = gameMode,
+                            firstMoveBehavior = firstMoveBehavior,
                             onBoardSizeChange = onBoardSizeChange,
                             onBoardStyleChange = onBoardStyleChange,
-                            onGameModeChange = onGameModeChange
+                            onGameModeChange = onGameModeChange,
+                            onFirstMoveBehaviorChange = onFirstMoveBehaviorChange
                         )
                     }
 
@@ -242,9 +250,11 @@ fun MenuScreenContent(
                         boardSize = boardSize,
                         boardStyle = boardStyle,
                         selectedGameMode = gameMode,
+                        firstMoveBehavior = firstMoveBehavior,
                         onBoardSizeChange = onBoardSizeChange,
                         onBoardStyleChange = onBoardStyleChange,
-                        onGameModeChange = onGameModeChange
+                        onGameModeChange = onGameModeChange,
+                        onFirstMoveBehaviorChange = onFirstMoveBehaviorChange
                     )
 
                     // Main action buttons
@@ -270,9 +280,11 @@ private fun QuickSetupCard(
     boardSize: BoardSize,
     boardStyle: BoardStyle,
     selectedGameMode: GameMode,
+    firstMoveBehavior: FirstMoveBehavior,
     onBoardSizeChange: (BoardSize) -> Unit,
     onBoardStyleChange: (BoardStyle) -> Unit,
-    onGameModeChange: (GameMode) -> Unit
+    onGameModeChange: (GameMode) -> Unit,
+    onFirstMoveBehaviorChange: (FirstMoveBehavior) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -331,7 +343,7 @@ private fun QuickSetupCard(
                         label = "To Win",
                         value = boardSize.winCondition,
                         onValueChange = { onBoardSizeChange(boardSize.copy(winCondition = it)) },
-                        range = minOf(3, maxOf(boardSize.x, boardSize.y, boardSize.z))..maxOf(boardSize.x, boardSize.y, boardSize.z),
+                        range = 3..maxOf(3, maxOf(boardSize.x, boardSize.y, boardSize.z)),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -349,6 +361,13 @@ private fun QuickSetupCard(
                 dataList = GameMode.entries,
                 selected = selectedGameMode,
                 onItemSelect = { onGameModeChange(it as GameMode) }
+            )
+
+            SettingSelector(
+                title = "First Move",
+                dataList = FirstMoveBehavior.entries,
+                selected = firstMoveBehavior,
+                onItemSelect = { onFirstMoveBehaviorChange(it as FirstMoveBehavior) }
             )
         }
     }
@@ -451,6 +470,7 @@ private fun MenuPreviewPortrait() {
         boardSize = BoardSize(),
         boardStyle = BoardStyle.LAYERED_3D,
         gameMode = GameMode.HARD,
+        firstMoveBehavior = FirstMoveBehavior.PLAYER_X,
         onStartGame = {},
         onViewStats = {},
         onExit = {},
@@ -459,7 +479,8 @@ private fun MenuPreviewPortrait() {
         onPvpMode = {},
         onBoardSizeChange = {},
         onBoardStyleChange = {},
-        onGameModeChange = {}
+        onGameModeChange = {},
+        onFirstMoveBehaviorChange = {}
     )
 }
 
@@ -470,6 +491,7 @@ private fun MenuPreviewLandscape() {
         boardSize = BoardSize(),
         boardStyle = BoardStyle.LAYERED_3D,
         gameMode = GameMode.HARD,
+        firstMoveBehavior = FirstMoveBehavior.PLAYER_X,
         onStartGame = {},
         onViewStats = {},
         onExit = {},
@@ -478,6 +500,7 @@ private fun MenuPreviewLandscape() {
         onPvpMode = {},
         onBoardSizeChange = {},
         onBoardStyleChange = {},
-        onGameModeChange = {}
+        onGameModeChange = {},
+        onFirstMoveBehaviorChange = {}
     )
 }

@@ -10,7 +10,8 @@ sealed interface Route {
 
     @Serializable
     data class Game(
-        val mode: GameMode
+        val mode: GameMode,
+        val boardSize: com.tuto.alokkumar.tictactoe.data.BoardSize
     ) : Route
 
     @Serializable

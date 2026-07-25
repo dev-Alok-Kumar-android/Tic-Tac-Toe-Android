@@ -39,6 +39,7 @@ fun ScoreBoard(
     xWins: Int,
     oWins: Int,
     draws: Int,
+    isPlayerOAI: Boolean,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -83,10 +84,10 @@ fun ScoreBoard(
             )
             
             ScoreItem(
-                title = "Player O",
+                title = if (isPlayerOAI) "AI (O)" else "Player O",
                 score = oWins,
                 color = MaterialTheme.colorScheme.tertiary,
-                icon = MyIcons.Face
+                icon = if (isPlayerOAI) MyIcons.Face else MyIcons.Person
             )
         }
     }

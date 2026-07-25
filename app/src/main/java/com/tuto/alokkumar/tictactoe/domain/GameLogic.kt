@@ -39,11 +39,13 @@ class GameLogic(
         private set
 
     /**
-     * Resets the game state, clearing board cells and returning starting turn to 'X'.
+     * Resets the game state, clearing board cells and returning starting turn to the specified player.
+     * 
+     * @param startPlayer The player character ('X' or 'O') who should start the next game.
      */
-    fun resetGame() {
+    fun resetGame(startPlayer: Char = 'X') {
         for (i in board.indices) board[i] = null
-        currentPlayer = 'X'
+        currentPlayer = startPlayer
         winner = null
         winLine = null
         lastMove = null
@@ -176,105 +178,6 @@ class GameLogic(
      * @return Ideal flat index cell choice, or null if board is fully occupied.
      */
     fun getBestMove(aiSymbol: Char): Int? {
-        val availableMoves = board.mapIndexedNotNull { i, cell -> if (cell == null) i else null }
-        if (availableMoves.isEmpty()) return null
-
-        val isStandard = boardSize.x == 3 && boardSize.y == 3 && boardSize.z == 1
-        
-        return when (gameMode) {
-            GameMode.EASY -> availableMoves.random()
-            GameMode.MEDIUM -> getMediumMove(aiSymbol, availableMoves)
-            GameMode.HARD -> {
-                if (isStandard) getMinimaxMove(aiSymbol) else getMediumMove(aiSymbol, availableMoves)
-            }
-            else -> availableMoves.random()
-        }
-    }
-
-    private fun getMediumMove(aiSymbol: Char, moves: List<Int>): Int {
-        val playerSymbol = if (aiSymbol == 'X') 'O' else 'X'
-        
-        // 1. Win if possible
-        for (i in moves) {
-            board[i] = aiSymbol
-            if (findWinner()?.first == aiSymbol) {
-                board[i] = null
-                return i
-            }
-            board[i] = null
-        }
-
-        // 2. Block player
-        for (i in moves) {
-            board[i] = playerSymbol
-            if (findWinner()?.first == playerSymbol) {
-                board[i] = null
-                return i
-            }
-            board[i] = null
-        }
-
-        // 3. Fallback to center or random
-        return moves.random()
-    }
-
-    private fun getMinimaxMove(aiSymbol: Char): Int {
-        var bestScore = Int.MIN_VALUE
-        var bestMove = -1
-
-        for (i in board.indices) {
-            if (board[i] == null) {
-                board[i] = aiSymbol
-                val score = minimax(0, false, aiSymbol, Int.MIN_VALUE, Int.MAX_VALUE)
-                board[i] = null
-                if (score > bestScore) {
-                    bestScore = score
-                    bestMove = i
-                }
-            }
-        }
-        return if (bestMove != -1) bestMove else board.indices.first { board[it] == null }
-    }
-
-    private fun minimax(depth: Int, isMax: Boolean, ai: Char, alpha: Int, beta: Int): Int {
-        val player = if (ai == 'X') 'O' else 'X'
-        val win = findWinner()?.first
-        if (win == ai) return 10 - depth
-        if (win == player) return depth - 10
-        if (board.none { it == null }) return 0
-        
-        // For 3x3 standard board, depth 9 is fine. 
-        // We only call this for standard boards in getBestMove.
-
-        var a = alpha
-        var b = beta
-
-        if (isMax) {
-            var best = Int.MIN_VALUE
-            for (i in board.indices) {
-                if (board[i] == null) {
-                    board[i] = ai
-                    val score = minimax(depth + 1, false, ai, a, b)
-                    board[i] = null
-                    best = maxOf(best, score)
-                    a = maxOf(a, best)
-                    if (b <= a) break
-                }
-            }
-            return best
-        } else {
-            var best = Int.MAX_VALUE
-            for (i in board.indices) {
-                if (board[i] == null) {
-                    board[i] = player
-                    val score = minimax(depth + 1, true, ai, a, b)
-                    board[i] = null
-                    best = minOf(best, score)
-                    b = minOf(b, best)
-                    if (b <= a) break
-                }
-            }
-            return best
-        }
+        return AiMove.getBestMove(board, aiSymbol, gameMode, boardSize, winningLines)
     }
 }

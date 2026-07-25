@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Tic Tac Toe</string>
+    <string name="language_english">English</string>
+    <string name="language_hindi">हिन्दी</string>
 </resources>

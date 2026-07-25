@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
+import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.GameMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +36,11 @@ class MenuViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), GameMode.HARD
     )
 
+    /** Current first move behavior. */
+    val firstMoveBehavior = preferences.firstMoveBehaviorFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), FirstMoveBehavior.PLAYER_X
+    )
+
     fun setBoardSize(size: BoardSize) {
         viewModelScope.launch {
             val maxDim = maxOf(size.x, size.y, size.z)
@@ -58,6 +64,13 @@ class MenuViewModel @Inject constructor(
     fun setGameMode(mode: GameMode) {
         viewModelScope.launch {
             preferences.setGameMode(mode)
+        }
+    }
+
+    /** Updates first move behavior. */
+    fun setFirstMoveBehavior(behavior: FirstMoveBehavior) {
+        viewModelScope.launch {
+            preferences.setFirstMoveBehavior(behavior)
         }
     }
 }

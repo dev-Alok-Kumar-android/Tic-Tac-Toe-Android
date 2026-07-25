@@ -10,10 +10,14 @@ import kotlinx.serialization.Serializable
  * @property theme App UI styling theme (Light, Dark, or System default).
  * @property bgmEnabled True if looping background music track is enabled.
  * @property soundEnabled True if tactical sound effects are enabled.
- * @property useImmersiveMode True if immersive fullscreen layout is enabled (hides status/navigation bars).
- * @property useDynamicColors True if dynamic system coloring is active on supported Android versions.
- * @property useDynamicColorScheme True if alternative dynamic palette behavior is active.
+ * @property immersiveMode True if immersive fullscreen layout is enabled (hides status/navigation bars).
+ * @property dynamicColor True if dynamic system coloring is active on supported Android versions.
+ * @property bgAnimationEnabled True if animated background lines are enabled.
+ * @property boardStyle Visual render style of the board (Classic or 3D Layered).
+ * @property orientation Fixed screen orientation lock preference.
  * @property appLanguage Active locale selection for application text.
+ * @property firstMoveBehavior Who starts the very first game of a session.
+ * @property nextMoveBehavior Logic for who starts subsequent games in a session.
  */
 @Serializable
 data class UserPreferences(
@@ -22,10 +26,14 @@ data class UserPreferences(
     val theme: AppTheme = AppTheme.SYSTEM,
     val bgmEnabled: Boolean = true,
     val soundEnabled: Boolean = true,
-    val useImmersiveMode: Boolean = false,
-    val useDynamicColors: Boolean = false,
-    val useDynamicColorScheme: Boolean = false,
+    val immersiveMode: Boolean = false,
+    val dynamicColor: Boolean = false,
+    val bgAnimationEnabled: Boolean = false,
+    val boardStyle: BoardStyle = BoardStyle.LAYERED_3D,
+    val orientation: Orientation = Orientation.SYSTEM,
     val appLanguage: AppLanguage = AppLanguage.ENGLISH,
+    val firstMoveBehavior: FirstMoveBehavior = FirstMoveBehavior.PLAYER_X,
+    val nextMoveBehavior: NextMoveBehavior = NextMoveBehavior.ALTERNATING
 )
 
 /**
@@ -41,6 +49,28 @@ enum class GameMode {
     MEDIUM,
     /** Challenging difficulty AI utilizing Minimax with Alpha-Beta pruning. */
     HARD
+}
+
+/**
+ * Behavior for the very first move of a game session.
+ */
+@Serializable
+enum class FirstMoveBehavior {
+    PLAYER_X,
+    PLAYER_O,
+    RANDOM
+}
+
+/**
+ * Behavior for starting subsequent games in a session.
+ */
+@Serializable
+enum class NextMoveBehavior {
+    FIXED,
+    ALTERNATING,
+    WINNER_STARTS,
+    LOSER_STARTS,
+    RANDOM
 }
 
 /**

@@ -15,8 +15,8 @@ import com.tuto.alokkumar.tictactoe.R
  * @property isSoundEnabled Flag enabling or disabling action sound effects.
  */
 class SoundManager(
-    var isBgmEnabled: Boolean = false,
-    var isSoundEnabled: Boolean = false
+    var isBgmEnabled: Boolean = true,
+    var isSoundEnabled: Boolean = true
 ) {
     private var bgmPlayer: MediaPlayer? = null
     private var soundPool: SoundPool? = null
@@ -54,27 +54,42 @@ class SoundManager(
      */
     fun playBgm(context: Context) {
         if (!isBgmEnabled) return
-        if (bgmPlayer == null) {
-            bgmPlayer = MediaPlayer.create(context.applicationContext, R.raw.bgm)
-            bgmPlayer?.isLooping = true
+        try {
+            if (bgmPlayer == null) {
+                bgmPlayer = MediaPlayer.create(context.applicationContext, R.raw.bgm)
+                bgmPlayer?.isLooping = true
+            }
+            if (bgmPlayer?.isPlaying == false) {
+                bgmPlayer?.start()
+            }
+        } catch (e: Exception) {
+            Log.e("SoundManager", "Error playing BGM", e)
         }
-        bgmPlayer?.start()
     }
 
     /**
      * Stops background music playback and frees media resources.
      */
     fun stopBgm() {
-        bgmPlayer?.stop()
-        bgmPlayer?.release()
-        bgmPlayer = null
+        try {
+            bgmPlayer?.apply {
+                if (isPlaying) stop()
+                release()
+            }
+        } catch (e: Exception) {
+            Log.e("SoundManager", "Error stopping BGM", e)
+        } finally {
+            bgmPlayer = null
+        }
     }
 
     /**
      * Pauses background music.
      */
     fun pauseBgm() {
-        bgmPlayer?.pause()
+        if (bgmPlayer?.isPlaying == true) {
+            bgmPlayer?.pause()
+        }
     }
 
     // 🔊 Sound effects
@@ -86,8 +101,10 @@ class SoundManager(
     fun playSound(name: String) {
         if (!isSoundEnabled || soundPool == null) return
         soundMap[name]?.let { id ->
-            Log.d("SoundManager", "playSound: $name")
-            soundPool?.play(id, 1f, 1f, 0, 0, 1f)
+            if (id != 0) {
+                Log.d("SoundManager", "playSound: $name")
+                soundPool?.play(id, 1f, 1f, 0, 0, 1f)
+            }
         }
     }
 
@@ -95,9 +112,9 @@ class SoundManager(
      * Releases active [MediaPlayer] and [SoundPool] instances to reclaim system memory.
      */
     fun release() {
-        bgmPlayer?.release()
-        bgmPlayer = null
+        stopBgm()
         soundPool?.release()
         soundPool = null
+        soundMap.clear()
     }
 }

@@ -1,82 +1,86 @@
 package com.tuto.alokkumar.tictactoe.domain
 
+import com.tuto.alokkumar.tictactoe.data.BoardSize
+import com.tuto.alokkumar.tictactoe.data.GameMode
+import kotlin.math.pow
+
 /**
- * AI Decision making utility offering various difficulty level calculations.
- *
- * Implements random cell selection (Easy), immediate win/block heuristic checking (Medium),
- * weight-based tactical evaluations (Heuristic), and comprehensive optimal search trees with
- * Alpha-Beta pruning (Hard/Minimax).
+ * AI Decision-making utility offering various difficulty level calculations.
  */
 object AiMove {
 
+    private val transpositionTable = mutableMapOf<String, Int>()
+
     /**
-     * Chooses an empty board cell completely at random.
-     * Used directly in `GameMode.EASY` difficulty.
-     *
-     * @param board Flat representation of the active board.
-     * @return A random index representing an empty cell, or null if board is full.
+     * Calculates the best move for any board configuration and difficulty.
      */
-    fun randomMove(board: List<Char?>): Int? {
+    fun getBestMove(
+        board: List<Char?>,
+        ai: Char,
+        gameMode: GameMode,
+        boardSize: BoardSize,
+        winLines: List<List<Int>>
+    ): Int? {
+        transpositionTable.clear()
         val moves = board.indices.filter { board[it] == null }
-        return if (moves.isNotEmpty()) moves.random() else null
+        if (moves.isEmpty()) return null
+
+        return when (gameMode) {
+            GameMode.EASY -> moves.random()
+            GameMode.MEDIUM -> mediumMove(board, ai, winLines)
+            GameMode.HARD -> {
+                // Determine max depth based on board complexity
+                val totalCells = boardSize.x * boardSize.y * boardSize.z
+                val maxDepth = when {
+                    totalCells <= 9 -> 9  // Full search for 3x3
+                    totalCells <= 16 -> 6 // 4x4
+                    totalCells <= 25 -> 4 // 5x5
+                    else -> 3 // Very large or 3D 3x3x3 (27 cells)
+                }
+                optimizedMinimaxMove(board.toMutableList(), ai, winLines, boardSize, maxDepth)
+            }
+            else -> moves.random()
+        }
     }
 
-    /**
-     * Executes Medium difficulty moves.
-     *
-     * Prioritizes winning moves first, followed by blocking opponent's immediate winning configurations.
-     * Falls back to a random cell selection if no immediate win/block scenario is found.
-     *
-     * @param board Active board contents list.
-     * @param ai Character representing the AI player's token ('X' or 'O').
-     * @param winLines List of lines (combinations of indices) that constitute a win.
-     * @return Recommended board cell index, or null if board is full.
-     */
-    fun mediumMove(
-        board: List<Char?>,
+    private fun optimizedMinimaxMove(
+        board: MutableList<Char?>,
         ai: Char,
         winLines: List<List<Int>>,
+        boardSize: BoardSize,
+        maxDepth: Int
     ): Int? {
-        val human = if (ai == 'X') 'O' else 'X'
         val emptyCells = board.indices.filter { board[it] == null }
-        val winningMoves = emptyCells.filter {
-            wouldWin(board, it, ai, winLines)
-        }
-        if (winningMoves.isNotEmpty()) {
-            return winningMoves.random()
-        }
-        val blockingMoves = emptyCells.filter {
-            wouldWin(board, it, human, winLines)
-        }
-        if (blockingMoves.isNotEmpty()) {
-            return blockingMoves.random()
-        }
-        return randomMove(board)
-    }
-
-    /**
-     * Selects moves using static board heuristics.
-     *
-     * Scores empty cells based on position weights and participation in potential lines.
-     *
-     * @param board Active board contents list.
-     * @param ai Character representing the AI player's token ('X' or 'O').
-     * @param winLines List of winning index lists.
-     * @return Best scored cell index, or null if board is full.
-     */
-    fun heuristicMove(
-        board: List<Char?>,
-        ai: Char,
-        winLines: List<List<Int>>,
-    ): Int? {
-        val human = if (ai == 'X') 'O' else 'X'
-        val emptyCells = board.indices.filter { board[it] == null }
+        if (emptyCells.isEmpty()) return null
 
         var bestScore = Int.MIN_VALUE
         val bestMoves = mutableListOf<Int>()
 
+        // Use symmetry to reduce initial branching
+        val evaluatedSymmetries = mutableSetOf<String>()
+
         for (i in emptyCells) {
-            val score = scoreMove(board, i, ai, winLines) - scoreMove(board, i, human, winLines)
+            board[i] = ai
+            val canonical = BoardSymmetry.getCanonicalForm(board, boardSize)
+            if (evaluatedSymmetries.contains(canonical)) {
+                board[i] = null
+                continue
+            }
+            evaluatedSymmetries.add(canonical)
+
+            val score = minimax(
+                depth = 0,
+                isMax = false,
+                ai = ai,
+                alpha = Int.MIN_VALUE,
+                beta = Int.MAX_VALUE,
+                board = board,
+                winLines = winLines,
+                boardSize = boardSize,
+                maxDepth = maxDepth
+            )
+            board[i] = null
+
             if (score > bestScore) {
                 bestScore = score
                 bestMoves.clear()
@@ -85,162 +89,88 @@ object AiMove {
                 bestMoves.add(i)
             }
         }
-        return bestMoves.randomOrNull()
+        return bestMoves.randomOrNull() ?: emptyCells.random()
     }
 
-    private fun scoreMove(
-        board: List<Char?>,
-        index: Int,
-        player: Char,
+    private fun minimax(
+        depth: Int,
+        isMax: Boolean,
+        ai: Char,
+        alpha: Int,
+        beta: Int,
+        board: MutableList<Char?>,
         winLines: List<List<Int>>,
+        boardSize: BoardSize,
+        maxDepth: Int
     ): Int {
-        var score = 0
+        val player = if (ai == 'X') 'O' else 'X'
+        
+        // Cache Check
+        val canonical = BoardSymmetry.getCanonicalForm(board, boardSize)
+        val cacheKey = "$canonical:$isMax:$depth"
+        transpositionTable[cacheKey]?.let { return it }
 
-        for (line in winLines) {
-            if (index !in line) continue
+        val winner = getWinnerForMinimax(winLines, board)
+        if (winner == ai) return 100 - depth
+        if (winner == player) return depth - 100
+        if (winner == 'D') return 0
 
-            val values = line.map {
-                if (it == index) player else board[it]
+        if (depth >= maxDepth) {
+            return evaluateHeuristic(board, ai, winLines)
+        }
+
+        var a = alpha
+        var b = beta
+
+        if (isMax) {
+            var best = Int.MIN_VALUE
+            for (i in board.indices) {
+                if (board[i] == null) {
+                    board[i] = ai
+                    val score = minimax(depth + 1, false, ai, a, b, board, winLines, boardSize, maxDepth)
+                    board[i] = null
+                    best = maxOf(best, score)
+                    a = maxOf(a, best)
+                    if (b <= a) break
+                }
             }
+            transpositionTable[cacheKey] = best
+            return best
+        } else {
+            var best = Int.MAX_VALUE
+            for (i in board.indices) {
+                if (board[i] == null) {
+                    board[i] = player
+                    val score = minimax(depth + 1, true, ai, a, b, board, winLines, boardSize, maxDepth)
+                    board[i] = null
+                    best = minOf(best, score)
+                    b = minOf(b, best)
+                    if (b <= a) break
+                }
+            }
+            transpositionTable[cacheKey] = best
+            return best
+        }
+    }
 
-            val countPlayer = values.count { it == player }
-            val countEmpty = values.count { it == null }
+    private fun evaluateHeuristic(board: List<Char?>, ai: Char, winLines: List<List<Int>>): Int {
+        val player = if (ai == 'X') 'O' else 'X'
+        var score = 0
+        for (line in winLines) {
+            val values = line.map { board[it] }
+            val aiCount = values.count { it == ai }
+            val playerCount = values.count { it == player }
 
-            score += when {
-                countPlayer == line.size -> 1000   // winning move
-                countPlayer == line.size - 1 && countEmpty == 1 -> 100
-                countPlayer == line.size - 2 && countEmpty == 2 -> 10
-                else -> 1
+            if (aiCount > 0 && playerCount == 0) {
+                score += 10.0.pow((aiCount - 1).toDouble()).toInt()
+            } else if (playerCount > 0 && aiCount == 0) {
+                score -= 10.0.pow((playerCount - 1).toDouble()).toInt()
             }
         }
         return score
     }
 
-    /**
-     * Executes an optimal turn for 2D boards using the Minimax search tree with Alpha-Beta pruning.
-     *
-     * Recursively projects potential future matches to guarantee defensive blocking or offensive victory.
-     *
-     * @param board Flat representation of the active board.
-     * @param aiSymbol Character token used by the AI player.
-     * @param winLines All possible precomputed index combinations forming a win.
-     * @param maxDepth Max limit on exploration depth to protect thread performance.
-     * @return The mathematically ideal cell index, or null.
-     */
-    fun minimaxMove2D(
-        board: MutableList<Char?>,
-        aiSymbol: Char,
-        winLines: List<List<Int>>,
-        maxDepth: Int = Int.MAX_VALUE,
-    ): Int? {
-        var bestScore = Int.MIN_VALUE
-        val bestMoves = mutableListOf<Int>()
-
-        for (i in board.indices) {
-            if (board[i] == null) {
-                val tempBoard = board.toMutableList()
-                tempBoard[i] = aiSymbol
-                val score = minimax(
-                    depth = 0,
-                    isMaximizing = false,
-                    aiSymbol = aiSymbol,
-                    alphaInit = Int.MIN_VALUE,
-                    betaInit = Int.MAX_VALUE,
-                    board = tempBoard,
-                    winLines = winLines,
-                    maxDepth = maxDepth
-                )
-
-                if (score > bestScore) {
-                    bestScore = score
-                    bestMoves.clear()
-                    bestMoves.add(i)
-                } else if (score == bestScore) {
-                    bestMoves.add(i)
-                }
-            }
-        }
-        return bestMoves.randomOrNull()
-    }
-
-    private fun minimax(
-        depth: Int,
-        isMaximizing: Boolean,
-        aiSymbol: Char,
-        alphaInit: Int,
-        betaInit: Int,
-        board: MutableList<Char?>,
-        winLines: List<List<Int>>,
-        maxDepth: Int,
-    ): Int {
-        val playerSymbol = if (aiSymbol == 'X') 'O' else 'X'
-        val result = getWinnerForMinimax(winLines, board)
-
-        if (result == aiSymbol) return 100 - depth
-        if (result == playerSymbol) return depth - 100
-        if (result == 'D') return 0
-
-        if (depth >= maxDepth) {
-            return run {
-                val human = if (aiSymbol == 'X') 'O' else 'X'
-                var score = 0
-                for (i in board.indices) {
-                    if (board[i] == aiSymbol) {
-                        score += when (i) {
-                            4 -> 5  // Center
-                            0, 2, 6, 8 -> 3 // Corners
-                            else -> 1
-                        }
-                    } else if (board[i] == human) {
-                        score -= when (i) {
-                            4 -> 5
-                            0, 2, 6, 8 -> 3
-                            else -> 1
-                        }
-                    }
-                }
-                score
-            }
-        }
-
-        var alpha = alphaInit
-        var beta = betaInit
-
-        if (isMaximizing) {
-            var maxEval = Int.MIN_VALUE
-            for (i in board.indices) {
-                if (board[i] == null) {
-                    board[i] = aiSymbol
-                    val eval =
-                        minimax(depth + 1, false, aiSymbol, alpha, beta, board, winLines, maxDepth)
-                    board[i] = null
-                    maxEval = maxOf(maxEval, eval)
-                    alpha = maxOf(alpha, eval)
-                    if (beta <= alpha) break
-                }
-            }
-            return maxEval
-        } else {
-            var minEval = Int.MAX_VALUE
-            for (i in board.indices) {
-                if (board[i] == null) {
-                    board[i] = playerSymbol
-                    val eval =
-                        minimax(depth + 1, true, aiSymbol, alpha, beta, board, winLines, maxDepth)
-                    board[i] = null
-                    minEval = minOf(minEval, eval)
-                    beta = minOf(beta, eval)
-                    if (beta <= alpha) break
-                }
-            }
-            return minEval
-        }
-    }
-
-    private fun getWinnerForMinimax(
-        winLines: List<List<Int>>,
-        board: MutableList<Char?>,
-    ): Char? {
+    private fun getWinnerForMinimax(winLines: List<List<Int>>, board: List<Char?>): Char? {
         for (line in winLines) {
             val first = board[line[0]] ?: continue
             if (line.all { board[it] == first }) return first
@@ -249,16 +179,25 @@ object AiMove {
         return null
     }
 
-    private fun wouldWin(
-        board: List<Char?>,
-        index: Int,
-        player: Char,
-        winLines: List<List<Int>>,
-    ): Boolean {
+    private fun mediumMove(board: List<Char?>, ai: Char, winLines: List<List<Int>>): Int {
+        val player = if (ai == 'X') 'O' else 'X'
+        val emptyCells = board.indices.filter { board[it] == null }
+
+        // 1. Win
+        for (i in emptyCells) {
+            if (wouldWin(board, i, ai, winLines)) return i
+        }
+        // 2. Block
+        for (i in emptyCells) {
+            if (wouldWin(board, i, player, winLines)) return i
+        }
+        // 3. Center/Random
+        return if (board.size > 4 && board[board.size / 2] == null) board.size / 2 else emptyCells.random()
+    }
+
+    private fun wouldWin(board: List<Char?>, index: Int, player: Char, winLines: List<List<Int>>): Boolean {
         val temp = board.toMutableList()
         temp[index] = player
-        return winLines.any { line ->
-            line.all { temp[it] == player }
-        }
+        return winLines.any { line -> line.all { temp[it] == player } }
     }
 }

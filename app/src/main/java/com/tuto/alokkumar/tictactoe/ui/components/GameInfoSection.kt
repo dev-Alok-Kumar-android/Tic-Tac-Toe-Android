@@ -10,15 +10,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
  * Renders game status announcements including active turns, win/draw banners,
- * AI thinking progress loaders, and a restart game action button.
+ * opponent thinking progress loaders, and a restart game action button.
  *
  * @param currentPlayer Character token indicating whose turn it currently is ('X' or 'O').
  * @param winner Flat indicator representing final match results: 'X', 'O', 'D' (Draw), or null if match is active.
- * @param isAiThinking Flag indicating if the background thread is calculating an AI move.
+ * @param isOpponentThinking Flag indicating if the background thread is calculating a move.
+ * @param isPlayerOAI Flag indicating if Player O is an AI opponent.
  * @param modifier Modifier applied to the parent column container.
  * @param onRestart Callback event triggered when tapping the restart button.
  */
@@ -26,7 +28,8 @@ import androidx.compose.ui.unit.dp
 fun GameInfoSection(
     currentPlayer: Char,
     winner: Char?,
-    isAiThinking: Boolean,
+    isOpponentThinking: Boolean,
+    isPlayerOAI: Boolean,
     modifier: Modifier = Modifier,
     onRestart: () -> Unit
 ) {
@@ -36,35 +39,39 @@ fun GameInfoSection(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         AnimatedVisibility(visible = winner == null) {
+            val turnText = if (isPlayerOAI && currentPlayer == 'O') "Opponent Thinking..." else "Turn: $currentPlayer"
             Text(
-                text = "Turn: $currentPlayer",
-                style = MaterialTheme.typography.titleLarge
+                text = turnText,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
         }
+        
         AnimatedVisibility(visible = winner != null) {
             Text(
                 text = if (winner == 'D') "It's a Draw!" else "Winner: ${winner?: "🧐"} 🎉",
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Black
             )
         }
 
         Button(
             onClick = onRestart,
-            shape = MaterialTheme.shapes.large
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.padding(top = 8.dp)
         ) {
-            Text("Restart", style = MaterialTheme.typography.bodyLarge)
+            Text("Restart Match", style = MaterialTheme.typography.bodyLarge)
         }
 
-
-        AnimatedVisibility(isAiThinking) {
+        AnimatedVisibility(isOpponentThinking) {
             Text(
-                "Thinking...",
+                "Analyzing...",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(12.dp)
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(12.dp),
+                fontWeight = FontWeight.Medium
             )
         }
-
     }
 }

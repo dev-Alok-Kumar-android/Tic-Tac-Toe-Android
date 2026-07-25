@@ -21,6 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.tuto.alokkumar.tictactoe.core.navigation.BoardSizeNavType
+import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.data.Orientation
@@ -33,6 +35,7 @@ import com.tuto.alokkumar.tictactoe.ui.screens.SettingsScreen
 import com.tuto.alokkumar.tictactoe.ui.theme.TicTacToeTheme
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModel
 import com.tuto.alokkumar.tictactoe.viewModel.SettingsViewModel
+import kotlin.reflect.typeOf
 
 /**
  * Top-level Navigation Graph for the Tic Tac Toe application.
@@ -47,7 +50,6 @@ fun AppNavigation(
     val activity = LocalActivity.current
     
     val isBgmEnabled by settingsViewModel.bgmEnabled.collectAsStateWithLifecycle()
-    val mode by settingsViewModel.selectedGameMode.collectAsStateWithLifecycle()
     val isImmersiveMode by settingsViewModel.immersiveMode.collectAsStateWithLifecycle()
     val orientationPreference by settingsViewModel.orientation.collectAsStateWithLifecycle()
     val theme by settingsViewModel.theme.collectAsStateWithLifecycle()
@@ -55,6 +57,15 @@ fun AppNavigation(
     
     var selectedHistory: GameHistory? by remember { mutableStateOf(null) }
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Handle immediate BGM playback when toggled ON in settings
+    LaunchedEffect(isBgmEnabled) {
+        if (isBgmEnabled) {
+            settingsViewModel.playBgm(context)
+        } else {
+            settingsViewModel.pauseBgm()
+        }
+    }
 
     DisposableEffect(lifecycleOwner, isBgmEnabled) {
         val observer = LifecycleEventObserver { _, event ->
@@ -93,16 +104,18 @@ fun AppNavigation(
             // Main Hub
             composable<Route.Menu> {
                 MenuScreen(
-                    onStartGame = { navController.navigate(Route.Game(mode)) },
+                    onStartGame = { selectedMode, size -> navController.navigate(Route.Game(selectedMode, size)) },
                     onViewStats = { navController.navigate(Route.History) },
                     onExit = { activity?.finish() },
-                    onPvpMode = { navController.navigate(Route.Game(GameMode.PVP)) },
+                    onPvpMode = { size -> navController.navigate(Route.Game(GameMode.PVP, size)) },
                     onSettings = { navController.navigate(Route.Settings) },
                     onAbout = { navController.navigate(Route.About) })
             }
 
             // Standard New Match Route
-            composable<Route.Game> {
+            composable<Route.Game>(
+                typeMap = mapOf(typeOf<BoardSize>() to BoardSizeNavType)
+            ) {
                 GameScreen(
                     onHome = {
                         navController.navigate(Route.Menu) {
@@ -110,7 +123,8 @@ fun AppNavigation(
                         }
                     }, 
                     onSettings = { navController.navigate(Route.Settings) }, 
-                    modifier = modifier
+                    modifier = modifier,
+                    viewModel = hiltViewModel()
                 )
             }
 

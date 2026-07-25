@@ -4,13 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
 import com.tuto.alokkumar.tictactoe.core.sound.SoundManager
+import com.tuto.alokkumar.tictactoe.data.AppLanguage
 import com.tuto.alokkumar.tictactoe.data.AppTheme
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
+import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.GameMode
+import com.tuto.alokkumar.tictactoe.data.NextMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.Orientation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,6 +30,21 @@ class SettingsViewModel @Inject constructor(
     private val preferences: PreferencesManager,
     private val soundManager: SoundManager
 ) : ViewModel() {
+
+    init {
+        // Synchronize SoundManager flags with user preferences
+        viewModelScope.launch {
+            preferences.userPreferencesFlow.collect { prefs ->
+                soundManager.isBgmEnabled = prefs.bgmEnabled
+                soundManager.isSoundEnabled = prefs.soundEnabled
+                
+                // Immediately stop music resources if it was disabled
+                if (!prefs.bgmEnabled) {
+                    soundManager.stopBgm()
+                }
+            }
+        }
+    }
 
     fun playBgm(context: android.content.Context) {
         soundManager.playBgm(context)
@@ -82,6 +101,21 @@ class SettingsViewModel @Inject constructor(
     /** Configured device screen orientation. */
     val orientation = preferences.orientationFlow.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), Orientation.SYSTEM
+    )
+
+    /** Behavior for the first move of a session. */
+    val firstMoveBehavior = preferences.firstMoveBehaviorFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), FirstMoveBehavior.PLAYER_X
+    )
+
+    /** Behavior for starting subsequent games. */
+    val nextMoveBehavior = preferences.nextMoveBehaviorFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), NextMoveBehavior.ALTERNATING
+    )
+
+    /** Active application language. */
+    val appLanguage = preferences.userPreferencesFlow.map { it.appLanguage }.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), AppLanguage.ENGLISH
     )
 
     /** Updates and persists the [GameMode]. */
@@ -156,6 +190,27 @@ class SettingsViewModel @Inject constructor(
     fun setTheme(theme: AppTheme) {
         viewModelScope.launch {
             preferences.setTheme(theme)
+        }
+    }
+
+    /** Updates application language. */
+    fun setLanguage(language: AppLanguage) {
+        viewModelScope.launch {
+            preferences.updatePrefs { it.copy(appLanguage = language) }
+        }
+    }
+
+    /** Updates [FirstMoveBehavior]. */
+    fun setFirstMoveBehavior(behavior: FirstMoveBehavior) {
+        viewModelScope.launch {
+            preferences.setFirstMoveBehavior(behavior)
+        }
+    }
+
+    /** Updates [NextMoveBehavior]. */
+    fun setNextMoveBehavior(behavior: NextMoveBehavior) {
+        viewModelScope.launch {
+            preferences.setNextMoveBehavior(behavior)
         }
     }
 }

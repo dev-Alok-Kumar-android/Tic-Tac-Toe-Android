@@ -44,14 +44,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.GameState
 import com.tuto.alokkumar.tictactoe.ui.components.AnimatedLinesBackground
@@ -60,19 +57,10 @@ import com.tuto.alokkumar.tictactoe.ui.components.GameInfoSection
 import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 import com.tuto.alokkumar.tictactoe.ui.components.PauseScreen
 import com.tuto.alokkumar.tictactoe.ui.components.ScoreBoard
-import com.tuto.alokkumar.tictactoe.ui.theme.TicTacToeTheme
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModel
 
 /**
  * Main game execution screen.
- *
- * Exposes core state bindings, handles system lifecycle hooks (automatically pauses gameplay
- * when the application is minimized or stopped in background), and overrides system back button presses.
- *
- * @param modifier Modifier applied to the outer layout container.
- * @param onHome Callback trigger to navigate back to Menu.
- * @param onSettings Callback trigger to navigate to Settings.
- * @param viewModel State holding view model instance.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,10 +68,10 @@ fun GameScreen(
     modifier: Modifier = Modifier,
     onHome: () -> Unit = {},
     onSettings: () -> Unit = {},
-    viewModel: GameViewModel = hiltViewModel(),
+    viewModel: GameViewModel,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val isAiThinking by viewModel.isAiThinking.collectAsStateWithLifecycle()
+    val isOpponentThinking by viewModel.isOpponentThinking.collectAsStateWithLifecycle()
     val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
     val activeLayer by viewModel.activeLayer.collectAsStateWithLifecycle()
     val bgAnimationEnabled by viewModel.bgAnimationEnabled.collectAsStateWithLifecycle()
@@ -104,8 +92,9 @@ fun GameScreen(
 
     GameContent(
         state = state,
-        isAiThinking = isAiThinking,
+        isOpponentThinking = isOpponentThinking,
         isPaused = isPaused,
+        isPlayerOAI = viewModel.isPlayerOAI,
         activeLayer = activeLayer,
         onPause = viewModel::pauseGame,
         onResume = viewModel::resumeGame,
@@ -128,8 +117,9 @@ fun GameScreen(
 @Composable
 fun GameContent(
     state: GameState,
-    isAiThinking: Boolean,
+    isOpponentThinking: Boolean,
     isPaused: Boolean,
+    isPlayerOAI: Boolean,
     activeLayer: Int,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -140,7 +130,7 @@ fun GameContent(
     onSettings: () -> Unit,
     modifier: Modifier = Modifier,
     bgAnimationEnabled: Boolean = false,
-    boardStyle: BoardStyle = BoardStyle.CLASSIC,
+    boardStyle: BoardStyle = BoardStyle.CLASSIC
 ) {
     Scaffold { padding ->
         BoxWithConstraints(
@@ -184,16 +174,18 @@ fun GameContent(
                             verticalArrangement = Arrangement.Center
                         ) {
                             ScoreBoard(
-                                state.xWins,
-                                state.oWins,
-                                state.draws,
+                                xWins = state.xWins,
+                                oWins = state.oWins,
+                                draws = state.draws,
+                                isPlayerOAI = isPlayerOAI,
                                 modifier = Modifier.widthIn(max = 360.dp)
                             )
                             Spacer(Modifier.height(16.dp))
                             GameInfoSection(
                                 currentPlayer = state.currentPlayer,
                                 winner = state.winner,
-                                isAiThinking = isAiThinking,
+                                isOpponentThinking = isOpponentThinking,
+                                isPlayerOAI = isPlayerOAI,
                                 onRestart = onRestart,
                                 modifier = Modifier.widthIn(max = 360.dp)
                             )
@@ -241,13 +233,15 @@ fun GameContent(
                             xWins = state.xWins,
                             oWins = state.oWins,
                             draws = state.draws,
+                            isPlayerOAI = isPlayerOAI,
                             modifier = Modifier.fillMaxWidth()
                         )
                         
                         GameInfoSection(
                             currentPlayer = state.currentPlayer,
                             winner = state.winner,
-                            isAiThinking = isAiThinking,
+                            isOpponentThinking = isOpponentThinking,
+                            isPlayerOAI = isPlayerOAI,
                             onRestart = onRestart
                         )
 
@@ -277,36 +271,34 @@ fun GameContent(
             }
 
             // Floating Pause Button (Moved to top of Z-order)
-                Box(
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                IconButton(
+                    onClick = { if (isPaused) onResume() else onPause() },
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.TopEnd
-                ) {
-                    IconButton(
-                        onClick = { if (isPaused) onResume() else onPause() },
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                                RoundedCornerShape(12.dp)
-                            )
-                    ) {
-                        Icon(
-                            imageVector = if (isPaused) MyIcons.PlayArrow else MyIcons.Pause,
-                            contentDescription = if (isPaused) "Resume" else "Pause",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                            RoundedCornerShape(12.dp)
                         )
-                    }
+                ) {
+                    Icon(
+                        imageVector = if (isPaused) MyIcons.PlayArrow else MyIcons.Pause,
+                        contentDescription = if (isPaused) "Resume" else "Pause",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
+            }
         }
     }
 }
 
 /**
  * Multi-layer controller for 3D playboards.
- * Displays horizontal selection chips for low layer stacks, transitioning to vertical selector panels
- * with quick-jump shortcuts for higher numbers of layers.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -479,53 +471,5 @@ fun LayerSelector(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
-@Composable
-fun GameScreenPortraitPreview() {
-    TicTacToeTheme {
-        GameContent(
-            state = GameState(
-                board = List(27) { if (it == 4) 'X' else if (it == 13) 'O' else null },
-                boardSize = BoardSize(3, 3, 3),
-                lastMove = 13
-            ),
-            isAiThinking = false,
-            isPaused = false,
-            activeLayer = 1,
-            onPause = {},
-            onResume = {},
-            onRestart = {},
-            onSetLayer = {},
-            onCellClick = {},
-            onHome = {},
-            onSettings = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, device = "spec:width=891dp,height=411dp,orientation=landscape")
-@Composable
-fun GameScreenLandscapePreview() {
-    TicTacToeTheme {
-        GameContent(
-            state = GameState(
-                board = List(27) { if (it == 4) 'X' else if (it == 13) 'O' else null },
-                boardSize = BoardSize(3, 3, 3),
-                lastMove = 13
-            ),
-            isAiThinking = true,
-            isPaused = false,
-            activeLayer = 1,
-            onPause = {},
-            onResume = {},
-            onRestart = {},
-            onSetLayer = {},
-            onCellClick = {},
-            onHome = {},
-            onSettings = {}
-        )
     }
 }
