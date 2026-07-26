@@ -3,8 +3,8 @@ package com.tuto.alokkumar.tictactoe.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
+import com.tuto.alokkumar.tictactoe.data.AiDifficulty
 import com.tuto.alokkumar.tictactoe.data.BoardSize
-import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.GameMode
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,14 +26,14 @@ class MenuViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), BoardSize()
     )
 
-    /** Current board rendering style. */
-    val boardStyle = preferences.boardStyleFlow.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), BoardStyle.LAYERED_3D
+    /** Current AI difficulty. */
+    val aiDifficulty = preferences.aiDifficultyFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), AiDifficulty.HARD
     )
 
-    /** Current game difficulty mode. */
+    /** Current game mode (PvP vs vs AI). */
     val gameMode = preferences.gameModeFlow.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), GameMode.HARD
+        viewModelScope, SharingStarted.WhileSubscribed(5000), GameMode.VS_AI
     )
 
     /** Current first move behavior. */
@@ -58,14 +58,14 @@ class MenuViewModel @Inject constructor(
         }
     }
 
-    /** Toggles or sets the board style. */
-    fun setBoardStyle(style: BoardStyle) {
+    /** Updates the selected AI difficulty. */
+    fun setAiDifficulty(difficulty: AiDifficulty) {
         viewModelScope.launch {
-            preferences.setBoardStyle(style)
+            preferences.setAiDifficulty(difficulty)
         }
     }
 
-    /** Updates the selected game difficulty. */
+    /** Updates the selected game mode. */
     fun setGameMode(mode: GameMode) {
         viewModelScope.launch {
             preferences.setGameMode(mode)

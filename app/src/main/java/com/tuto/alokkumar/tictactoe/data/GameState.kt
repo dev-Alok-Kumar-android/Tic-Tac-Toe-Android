@@ -1,10 +1,12 @@
 package com.tuto.alokkumar.tictactoe.data
 
 import kotlinx.serialization.Serializable
+import java.util.UUID
 
 /**
  * Immutable snapshot representing the active or final state of a game.
  *
+ * @property matchId Unique identifier for the specific game session.
  * @property board Flattened list of cell contents. Represents a 3D grid layout when [BoardSize.z] > 1.
  *                 Cells contain 'X', 'O', or null if empty.
  * @property currentPlayer Character representation of the player whose turn it currently is ('X' or 'O').
@@ -18,13 +20,25 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class GameState(
-    val board: List<Char?> = List(9) { null },
-    val currentPlayer: Char = 'X',
-    val winner: Char? = null,
+    val matchId: String = UUID.randomUUID().toString(),
+    val board: List<String?> = List(9) { null },
+    val currentPlayer: String = "X",
+    val winner: String? = null,
     val winLine: List<Int>? = null,
     val lastMove: Int? = null,
     val xWins: Int = 0,
     val oWins: Int = 0,
     val draws: Int = 0,
     val boardSize: BoardSize = BoardSize()
+)
+
+/**
+ * Summary statistics for game history dashboard.
+ */
+data class GameStats(
+    val totalGames: Int = 0,
+    val xWins: Int = 0,
+    val oWins: Int = 0,
+    val draws: Int = 0,
+    val winRate: Int = 0
 )

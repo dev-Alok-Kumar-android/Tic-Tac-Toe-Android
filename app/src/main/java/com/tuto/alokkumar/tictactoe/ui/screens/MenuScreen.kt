@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -44,10 +45,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuto.alokkumar.tictactoe.R
+import com.tuto.alokkumar.tictactoe.data.AiDifficulty
 import com.tuto.alokkumar.tictactoe.data.BoardSize
-import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
-import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 import com.tuto.alokkumar.tictactoe.ui.components.NumberPicker
 import com.tuto.alokkumar.tictactoe.ui.components.SettingSelector
@@ -55,12 +55,10 @@ import com.tuto.alokkumar.tictactoe.viewModel.MenuViewModel
 
 /**
  * Main application landing menu page displaying navigation buttons to different modes and panels.
- *
- * Implements double-back-tap confirmation and custom [AlertDialog] prompts to securely handle exit requests.
  */
 @Composable
 fun MenuScreen(
-    onStartGame: (GameMode, BoardSize) -> Unit,
+    onStartGame: (AiDifficulty?, BoardSize) -> Unit,
     onViewStats: () -> Unit,
     onExit: () -> Unit,
     onAbout: () -> Unit = {},
@@ -69,26 +67,25 @@ fun MenuScreen(
     viewModel: MenuViewModel = hiltViewModel()
 ) {
     val boardSize by viewModel.boardSize.collectAsStateWithLifecycle()
-    val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
-    val gameMode by viewModel.gameMode.collectAsStateWithLifecycle()
+    val aiDifficulty by viewModel.aiDifficulty.collectAsStateWithLifecycle()
     val firstMoveBehavior by viewModel.firstMoveBehavior.collectAsStateWithLifecycle()
     val aiStrength by viewModel.aiStrength.collectAsStateWithLifecycle()
 
     MenuScreenContent(
         boardSize = boardSize,
-        boardStyle = boardStyle,
-        gameMode = gameMode,
+        aiDifficulty = aiDifficulty,
         firstMoveBehavior = firstMoveBehavior,
         aiStrength = aiStrength,
-        onStartGame = { onStartGame(gameMode, boardSize) },
+        onStartGame = { 
+            onStartGame(aiDifficulty, boardSize) 
+        },
         onViewStats = onViewStats,
         onExit = onExit,
         onAbout = onAbout,
         onSettings = onSettings,
         onPvpMode = { onPvpMode(boardSize) },
         onBoardSizeChange = { size -> viewModel.setBoardSize(size) },
-        onBoardStyleChange = { viewModel.setBoardStyle(it) },
-        onGameModeChange = { viewModel.setGameMode(it) },
+        onAiDifficultyChange = { viewModel.setAiDifficulty(it) },
         onFirstMoveBehaviorChange = { viewModel.setFirstMoveBehavior(it) }
     )
 }
@@ -96,8 +93,7 @@ fun MenuScreen(
 @Composable
 fun MenuScreenContent(
     boardSize: BoardSize,
-    boardStyle: BoardStyle,
-    gameMode: GameMode,
+    aiDifficulty: AiDifficulty,
     firstMoveBehavior: FirstMoveBehavior,
     aiStrength: Int,
     onStartGame: () -> Unit,
@@ -107,8 +103,7 @@ fun MenuScreenContent(
     onSettings: () -> Unit,
     onPvpMode: () -> Unit,
     onBoardSizeChange: (BoardSize) -> Unit,
-    onBoardStyleChange: (BoardStyle) -> Unit,
-    onGameModeChange: (GameMode) -> Unit,
+    onAiDifficultyChange: (AiDifficulty) -> Unit,
     onFirstMoveBehaviorChange: (FirstMoveBehavior) -> Unit
 ) {
     val configuration = LocalConfiguration.current
@@ -166,7 +161,6 @@ fun MenuScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Left Column: Branding + Setup
                     Column(
                         modifier = Modifier
                             .weight(1.1f)
@@ -176,7 +170,7 @@ fun MenuScreenContent(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Tic Tac Toe",
+                            text = stringResource(R.string.app_name),
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.ExtraBold,
@@ -187,18 +181,15 @@ fun MenuScreenContent(
 
                         QuickSetupCard(
                             boardSize = boardSize,
-                            boardStyle = boardStyle,
-                            selectedGameMode = gameMode,
+                            selectedAiDifficulty = aiDifficulty,
                             firstMoveBehavior = firstMoveBehavior,
                             aiStrength = aiStrength,
                             onBoardSizeChange = onBoardSizeChange,
-                            onBoardStyleChange = onBoardStyleChange,
-                            onGameModeChange = onGameModeChange,
+                            onAiDifficultyChange = onAiDifficultyChange,
                             onFirstMoveBehaviorChange = onFirstMoveBehaviorChange
                         )
                     }
 
-                    // Right Column: Main Actions + Bottom Nav
                     Column(
                         modifier = Modifier
                             .weight(0.9f)
@@ -232,7 +223,6 @@ fun MenuScreenContent(
                     verticalArrangement = Arrangement.spacedBy(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Title
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = stringResource(R.string.app_name).uppercase(),
@@ -251,26 +241,21 @@ fun MenuScreenContent(
                         )
                     }
 
-                    // Quick Setup Card
                     QuickSetupCard(
                         boardSize = boardSize,
-                        boardStyle = boardStyle,
-                        selectedGameMode = gameMode,
+                        selectedAiDifficulty = aiDifficulty,
                         firstMoveBehavior = firstMoveBehavior,
                         aiStrength = aiStrength,
                         onBoardSizeChange = onBoardSizeChange,
-                        onBoardStyleChange = onBoardStyleChange,
-                        onGameModeChange = onGameModeChange,
+                        onAiDifficultyChange = onAiDifficultyChange,
                         onFirstMoveBehaviorChange = onFirstMoveBehaviorChange
                     )
 
-                    // Main action buttons
                     MainActionButtons(
                         onStartGame = onStartGame,
                         onPvpMode = onPvpMode
                     )
 
-                    // Bottom navigation
                     BottomNavigation(
                         onAbout = onAbout,
                         onSettings = onSettings,
@@ -285,13 +270,11 @@ fun MenuScreenContent(
 @Composable
 private fun QuickSetupCard(
     boardSize: BoardSize,
-    boardStyle: BoardStyle,
-    selectedGameMode: GameMode,
+    selectedAiDifficulty: AiDifficulty,
     firstMoveBehavior: FirstMoveBehavior,
     aiStrength: Int,
     onBoardSizeChange: (BoardSize) -> Unit,
-    onBoardStyleChange: (BoardStyle) -> Unit,
-    onGameModeChange: (GameMode) -> Unit,
+    onAiDifficultyChange: (AiDifficulty) -> Unit,
     onFirstMoveBehaviorChange: (FirstMoveBehavior) -> Unit
 ) {
     Card(
@@ -357,8 +340,8 @@ private fun QuickSetupCard(
                 }
             }
 
-            if (selectedGameMode == GameMode.HARD || selectedGameMode == GameMode.IMPOSSIBLE) {
-                 val strengthText = if (selectedGameMode == GameMode.IMPOSSIBLE) "100" else aiStrength.toString()
+            if (selectedAiDifficulty == AiDifficulty.HARD || selectedAiDifficulty == AiDifficulty.IMPOSSIBLE) {
+                 val strengthText = if (selectedAiDifficulty == AiDifficulty.IMPOSSIBLE) "100" else aiStrength.toString()
                  Text(
                     text = stringResource(R.string.ai_skill_level, strengthText.toInt()),
                     style = MaterialTheme.typography.labelSmall,
@@ -367,23 +350,26 @@ private fun QuickSetupCard(
             }
 
             SettingSelector(
-                title = stringResource(R.string.style),
-                dataList = BoardStyle.entries,
-                selected = boardStyle,
-                onItemSelect = { onBoardStyleChange(it as BoardStyle) }
-            )
-
-            SettingSelector(
                 title = stringResource(R.string.difficulty),
-                dataList = GameMode.entries,
-                selected = selectedGameMode,
-                onItemSelect = { onGameModeChange(it as GameMode) }
+                dataList = AiDifficulty.entries,
+                selected = selectedAiDifficulty,
+                labelMapper = { data ->
+                    val res = when(data as AiDifficulty) {
+                        AiDifficulty.EASY -> R.string.mode_easy
+                        AiDifficulty.MEDIUM -> R.string.mode_medium
+                        AiDifficulty.HARD -> R.string.mode_hard
+                        AiDifficulty.IMPOSSIBLE -> R.string.mode_impossible
+                    }
+                    stringResource(res)
+                },
+                onItemSelect = { onAiDifficultyChange(it as AiDifficulty) }
             )
 
             SettingSelector(
                 title = stringResource(R.string.first_move),
                 dataList = FirstMoveBehavior.entries,
                 selected = firstMoveBehavior,
+                labelMapper = { (it as FirstMoveBehavior).name },
                 onItemSelect = { onFirstMoveBehaviorChange(it as FirstMoveBehavior) }
             )
         }
@@ -412,7 +398,7 @@ private fun MainActionButtons(
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
             Icon(MyIcons.PlayArrow, contentDescription = null)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.play_vs_ai), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
@@ -485,8 +471,7 @@ private fun NavigationItem(
 private fun MenuPreviewPortrait() {
     MenuScreenContent(
         boardSize = BoardSize(),
-        boardStyle = BoardStyle.LAYERED_3D,
-        gameMode = GameMode.HARD,
+        aiDifficulty = AiDifficulty.HARD,
         firstMoveBehavior = FirstMoveBehavior.PLAYER_X,
         aiStrength = 75,
         onStartGame = {},
@@ -496,8 +481,7 @@ private fun MenuPreviewPortrait() {
         onSettings = {},
         onPvpMode = {},
         onBoardSizeChange = {},
-        onBoardStyleChange = {},
-        onGameModeChange = {},
+        onAiDifficultyChange = {},
         onFirstMoveBehaviorChange = {}
     )
 }
@@ -507,8 +491,7 @@ private fun MenuPreviewPortrait() {
 private fun MenuPreviewLandscape() {
     MenuScreenContent(
         boardSize = BoardSize(),
-        boardStyle = BoardStyle.LAYERED_3D,
-        gameMode = GameMode.HARD,
+        aiDifficulty = AiDifficulty.HARD,
         firstMoveBehavior = FirstMoveBehavior.PLAYER_X,
         aiStrength = 75,
         onStartGame = {},
@@ -518,8 +501,7 @@ private fun MenuPreviewLandscape() {
         onSettings = {},
         onPvpMode = {},
         onBoardSizeChange = {},
-        onBoardStyleChange = {},
-        onGameModeChange = {},
+        onAiDifficultyChange = {},
         onFirstMoveBehaviorChange = {}
     )
 }

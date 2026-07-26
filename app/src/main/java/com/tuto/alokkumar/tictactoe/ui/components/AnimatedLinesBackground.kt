@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.delay
 import kotlin.math.pow
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Renders an interactive canvas background featuring floating animated spring chains (snakes)
@@ -106,7 +107,7 @@ fun AnimatedLinesBackground(
 
     LaunchedEffect(Unit) {
         while (true) {
-            delay(16L)
+            delay(16L.milliseconds)
             if (canvasSize == Size.Zero) continue
 
             chains.forEach { chain ->
@@ -215,7 +216,7 @@ private fun resolveSpring(
 
     if (dist == 0f) return current + Offset(0.1f, 0f) // Prevent 0 division
 
-    if (dist >= minLen && dist <= maxLen) return current
+    if (dist in minLen..maxLen) return current
 
     val targetDist = dist.coerceIn(minLen, maxLen)
     val targetPos = anchor + (diff / dist) * targetDist

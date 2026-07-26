@@ -43,12 +43,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tuto.alokkumar.tictactoe.R
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.GameState
 import com.tuto.alokkumar.tictactoe.ui.components.AnimatedLinesBackground
@@ -57,11 +59,9 @@ import com.tuto.alokkumar.tictactoe.ui.components.GameInfoSection
 import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 import com.tuto.alokkumar.tictactoe.ui.components.PauseScreen
 import com.tuto.alokkumar.tictactoe.ui.components.ScoreBoard
+import com.tuto.alokkumar.tictactoe.ui.components.VictoryEffects
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModel
 
-/**
- * Main game execution screen.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(
@@ -76,6 +76,15 @@ fun GameScreen(
     val activeLayer by viewModel.activeLayer.collectAsStateWithLifecycle()
     val bgAnimationEnabled by viewModel.bgAnimationEnabled.collectAsStateWithLifecycle()
     val boardStyle by viewModel.boardStyle.collectAsStateWithLifecycle()
+    
+    val p1Symbol by viewModel.p1Symbol.collectAsStateWithLifecycle()
+    val p2Symbol by viewModel.p2Symbol.collectAsStateWithLifecycle()
+    val p1Color by viewModel.p1Color.collectAsStateWithLifecycle()
+    val p2Color by viewModel.p2Color.collectAsStateWithLifecycle()
+    val p1Name by viewModel.p1Name.collectAsStateWithLifecycle()
+    val p2Name by viewModel.p2Name.collectAsStateWithLifecycle()
+    val humanSymbol by viewModel.humanSymbol.collectAsStateWithLifecycle()
+
     val lifecycleOwner = LocalLifecycleOwner.current
 
     BackHandler(enabled = true) {
@@ -94,32 +103,42 @@ fun GameScreen(
         state = state,
         isOpponentThinking = isOpponentThinking,
         isPaused = isPaused,
-        isPlayerOAI = viewModel.isPlayerOAI,
+        isVsAI = viewModel.isVsAI,
+        humanSymbol = humanSymbol,
+        p1Symbol = p1Symbol,
+        p2Symbol = p2Symbol,
+        p1Color = p1Color,
+        p2Color = p2Color,
+        p1Name = p1Name,
+        p2Name = p2Name,
         activeLayer = activeLayer,
         onPause = viewModel::pauseGame,
         onResume = viewModel::resumeGame,
         onRestart = viewModel::restartGame,
         onSetLayer = viewModel::setLayer,
         onCellClick = viewModel::onCellClicked,
-        onHome = { viewModel.saveHistory(); onHome() },
-        onSettings = { viewModel.saveHistory(); onSettings() },
+        onHome = { onHome() },
+        onSettings = { onSettings() },
         bgAnimationEnabled = bgAnimationEnabled,
         boardStyle = boardStyle,
         modifier = modifier
     )
 }
 
-/**
- * Responsive rendering layout containing scoreboard metrics, turn updates, interactive game cells,
- * layer selectors, and floating pause trigger overlays.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameContent(
     state: GameState,
     isOpponentThinking: Boolean,
     isPaused: Boolean,
-    isPlayerOAI: Boolean,
+    isVsAI: Boolean,
+    humanSymbol: String,
+    p1Symbol: String,
+    p2Symbol: String,
+    p1Color: Long,
+    p2Color: Long,
+    p1Name: String,
+    p2Name: String,
     activeLayer: Int,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -135,9 +154,7 @@ fun GameContent(
     Scaffold { padding ->
         BoxWithConstraints(
             contentAlignment = Alignment.Center,
-            modifier = modifier
-                .fillMaxSize()
-                .padding(padding)
+            modifier = modifier.fillMaxSize().padding(padding)
         ) {
             if (bgAnimationEnabled) {
                 AnimatedLinesBackground(
@@ -146,6 +163,10 @@ fun GameContent(
                     chainCount = 6,
                     baseSpeed = 0.5f
                 )
+            }
+
+            if (state.winner != null && state.winner != "D") {
+                VictoryEffects()
             }
 
             val isLandscape = maxWidth > maxHeight
@@ -158,18 +179,16 @@ fun GameContent(
                     onSettings = onSettings
                 )
             } else {
+                val isAiTurn = isVsAI && state.currentPlayer != humanSymbol && state.winner == null
+                
                 if (isLandscape) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(
-                            modifier = Modifier
-                                .weight(0.4f)
-                                .verticalScroll(rememberScrollState()),
+                            modifier = Modifier.weight(0.4f).verticalScroll(rememberScrollState()),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -177,24 +196,29 @@ fun GameContent(
                                 xWins = state.xWins,
                                 oWins = state.oWins,
                                 draws = state.draws,
-                                isPlayerOAI = isPlayerOAI,
+                                p1Name = p1Name,
+                                p2Name = p2Name,
+                                p1Symbol = p1Symbol,
+                                p2Symbol = p2Symbol,
+                                isPlayerOAI = isVsAI && humanSymbol == p1Symbol,
                                 modifier = Modifier.widthIn(max = 360.dp)
                             )
                             Spacer(Modifier.height(16.dp))
                             GameInfoSection(
-                                currentPlayer = state.currentPlayer,
-                                winner = state.winner,
-                                isOpponentThinking = isOpponentThinking,
-                                isPlayerOAI = isPlayerOAI,
+                                currentPlayerSymbol = state.currentPlayer,
+                                winnerSymbol = state.winner,
+                                isAiTurn = isAiTurn,
+                                p1Name = p1Name,
+                                p2Name = p2Name,
+                                p1Symbol = p1Symbol,
+                                p2Symbol = p2Symbol,
                                 onRestart = onRestart,
                                 modifier = Modifier.widthIn(max = 360.dp)
                             )
                         }
                         
                         Column(
-                            modifier = Modifier
-                                .weight(0.6f)
-                                .verticalScroll(rememberScrollState()),
+                            modifier = Modifier.weight(0.6f).verticalScroll(rememberScrollState()),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -212,6 +236,10 @@ fun GameContent(
                                     boardSize = state.boardSize,
                                     activeLayer = activeLayer,
                                     winLine = state.winLine,
+                                    p1Symbol = p1Symbol,
+                                    p2Symbol = p2Symbol,
+                                    p1Color = Color(p1Color),
+                                    p2Color = Color(p2Color),
                                     lastMove = state.lastMove,
                                     onCellClick = onCellClick,
                                     boardStyle = boardStyle,
@@ -222,10 +250,7 @@ fun GameContent(
                     }
                 } else {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
+                        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.SpaceEvenly
                     ) {
@@ -233,15 +258,22 @@ fun GameContent(
                             xWins = state.xWins,
                             oWins = state.oWins,
                             draws = state.draws,
-                            isPlayerOAI = isPlayerOAI,
+                            p1Name = p1Name,
+                            p2Name = p2Name,
+                            p1Symbol = p1Symbol,
+                            p2Symbol = p2Symbol,
+                            isPlayerOAI = isVsAI && humanSymbol == p1Symbol,
                             modifier = Modifier.fillMaxWidth()
                         )
                         
                         GameInfoSection(
-                            currentPlayer = state.currentPlayer,
-                            winner = state.winner,
-                            isOpponentThinking = isOpponentThinking,
-                            isPlayerOAI = isPlayerOAI,
+                            currentPlayerSymbol = state.currentPlayer,
+                            winnerSymbol = state.winner,
+                            isAiTurn = isAiTurn,
+                            p1Name = p1Name,
+                            p2Name = p2Name,
+                            p1Symbol = p1Symbol,
+                            p2Symbol = p2Symbol,
                             onRestart = onRestart
                         )
 
@@ -260,6 +292,10 @@ fun GameContent(
                                 boardSize = state.boardSize,
                                 activeLayer = activeLayer,
                                 winLine = state.winLine,
+                                p1Symbol = p1Symbol,
+                                p2Symbol = p2Symbol,
+                                p1Color = Color(p1Color),
+                                p2Color = Color(p2Color),
                                 lastMove = state.lastMove,
                                 onCellClick = onCellClick,
                                 boardStyle = boardStyle,
@@ -270,20 +306,16 @@ fun GameContent(
                 }
             }
 
-            // Floating Pause Button (Moved to top of Z-order)
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxSize().padding(16.dp),
                 contentAlignment = Alignment.TopEnd
             ) {
                 IconButton(
                     onClick = { if (isPaused) onResume() else onPause() },
-                    modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                            RoundedCornerShape(12.dp)
-                        )
+                    modifier = Modifier.background(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                        RoundedCornerShape(12.dp)
+                    )
                 ) {
                     Icon(
                         imageVector = if (isPaused) MyIcons.PlayArrow else MyIcons.Pause,
@@ -365,7 +397,7 @@ fun LayerSelector(
                 onClick = { if (selected > 0) onSelect(selected - 1) },
                 enabled = selected > 0
             ) {
-                Icon(MyIcons.KeyboardArrowDown, contentDescription = "Layer Down")
+                Icon(MyIcons.KeyboardArrowDown, contentDescription = stringResource(R.string.layer_down))
             }
 
             // Central Info Button & List Opener
@@ -404,7 +436,7 @@ fun LayerSelector(
                         }
                     }
                     Spacer(Modifier.width(12.dp))
-                    Icon(MyIcons.Layers, contentDescription = "Layers List", modifier = Modifier.size(20.dp))
+                    Icon(MyIcons.Layers, contentDescription = stringResource(R.string.layers_list), modifier = Modifier.size(20.dp))
                 }
 
                 DropdownMenu(
@@ -444,7 +476,7 @@ fun LayerSelector(
                 onClick = { if (selected < count - 1) onSelect(selected + 1) },
                 enabled = selected < count - 1
             ) {
-                Icon(MyIcons.KeyboardArrowUp, contentDescription = "Layer Up")
+                Icon(MyIcons.KeyboardArrowUp, contentDescription = stringResource(R.string.layer_up))
             }
 
             // Quick Jump to Last Played
@@ -464,7 +496,7 @@ fun LayerSelector(
                 ) {
                     Icon(
                         imageVector = MyIcons.JumpToLast,
-                        contentDescription = "Jump to Last Played",
+                        contentDescription = stringResource(R.string.jump_to_last),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )

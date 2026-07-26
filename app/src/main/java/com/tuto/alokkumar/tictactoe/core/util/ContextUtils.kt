@@ -11,7 +11,7 @@ import java.util.Locale
 object ContextUtils {
 
     fun updateLocale(context: Context, localeCode: String): ContextWrapper {
-        val locale = Locale(localeCode)
+        val locale = Locale.forLanguageTag(localeCode)
         Locale.setDefault(locale)
         
         val resources = context.resources

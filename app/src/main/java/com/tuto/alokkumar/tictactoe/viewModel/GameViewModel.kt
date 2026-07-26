@@ -13,6 +13,7 @@ import com.tuto.alokkumar.tictactoe.Route
 import com.tuto.alokkumar.tictactoe.core.navigation.BoardSizeNavType
 import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
 import com.tuto.alokkumar.tictactoe.core.sound.SoundManager
+import com.tuto.alokkumar.tictactoe.data.AiDifficulty
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
@@ -53,19 +54,39 @@ class GameViewModel @Inject constructor(
         ) 
     } catch (_: Exception) { null }
     
-    private val gameMode: GameMode = route?.mode ?: GameMode.PVP
+    private val _gameMode = MutableStateFlow(if (route?.mode == null) GameMode.PVP else GameMode.VS_AI)
+    val gameMode = _gameMode.asStateFlow()
+
+    private val _aiDifficulty = MutableStateFlow(route?.mode ?: AiDifficulty.HARD)
+    val aiDifficulty = _aiDifficulty.asStateFlow()
+
     private val boardSize: BoardSize = route?.boardSize ?: BoardSize()
+    private val logic = GameLogic(_aiDifficulty.value, boardSize)
 
-    private val logic = GameLogic(gameMode, boardSize)
+    // Player Customization State (Session specific)
+    private val _p1Symbol = MutableStateFlow("X")
+    val p1Symbol = _p1Symbol.asStateFlow()
 
-    /** The symbol used by the local human player. */
-    var humanSymbol: Char = 'X'
-        private set
+    private val _p2Symbol = MutableStateFlow("O")
+    val p2Symbol = _p2Symbol.asStateFlow()
 
-    /** Returns true if the current match has an AI opponent. */
-    val isVsAI: Boolean = gameMode != GameMode.PVP
+    private val _p1Color = MutableStateFlow(0xFFE91E63)
+    val p1Color = _p1Color.asStateFlow()
 
-    private var currentStartPlayer: Char = 'X'
+    private val _p2Color = MutableStateFlow(0xFF2196F3)
+    val p2Color = _p2Color.asStateFlow()
+
+    private val _p1Name = MutableStateFlow("Player 1")
+    val p1Name = _p1Name.asStateFlow()
+
+    private val _p2Name = MutableStateFlow("Player 2")
+    val p2Name = _p2Name.asStateFlow()
+
+    private val _humanSymbol = MutableStateFlow("X")
+    val humanSymbol = _humanSymbol.asStateFlow()
+
+    val isVsAI: Boolean get() = _gameMode.value == GameMode.VS_AI
+    val isPlayerOAI: Boolean get() = isVsAI && _humanSymbol.value == _p1Symbol.value
 
     private val _state = MutableStateFlow(GameState(
         board = List(boardSize.x * boardSize.y * boardSize.z) { null },
@@ -73,11 +94,10 @@ class GameViewModel @Inject constructor(
     ))
     val state = _state.asStateFlow()
 
-    /** Returns true if Player O is an AI opponent. Legacy flag, consider using [isVsAI] with turn check. */
-    val isPlayerOAI: Boolean = isVsAI && humanSymbol == 'X'
-    
+    private val isRestoring = route == null
+    private var isMatchSaved = false
+
     private val _isOpponentThinking = MutableStateFlow(false)
-    /** Emits true when the opponent (AI or remote) is currently calculating its next move. */
     val isOpponentThinking = _isOpponentThinking.asStateFlow()
     
     private val _isPaused = MutableStateFlow(false)
@@ -94,34 +114,49 @@ class GameViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), BoardStyle.LAYERED_3D
     )
 
+    private val hapticEnabled = preferences.hapticEnabledFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), true
+    )
+
     init {
         viewModelScope.launch {
-            val firstMovePref = preferences.firstMoveBehaviorFlow.first()
+            val prefs = preferences.userPreferencesFlow.first()
             
-            // Fix: Human is X if X starts, or if Random chose X, etc.
-            // But we actually want to know what symbol the user PREFERS to play as.
-            // For now, let's assume if it's VS AI, and first move is Player O, 
-            // the human wants to play as O and go first.
-            humanSymbol = when (firstMovePref) {
-                FirstMoveBehavior.PLAYER_X -> 'X'
-                FirstMoveBehavior.PLAYER_O -> 'O'
-                else -> 'X' // Random/Default human is X
-            }
+            // Only apply global defaults if we are NOT restoring from history
+            if (!isRestoring) {
+                _p1Symbol.value = prefs.p1Symbol
+                _p2Symbol.value = prefs.p2Symbol
+                _p1Name.value = prefs.p1Name
+                _p2Name.value = prefs.p2Name
+                _p1Color.value = prefs.p1Color
+                _p2Color.value = prefs.p2Color
 
-            currentStartPlayer = when (firstMovePref) {
-                FirstMoveBehavior.PLAYER_X -> 'X'
-                FirstMoveBehavior.PLAYER_O -> 'O'
-                FirstMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
-            }
-            logic.resetGame(currentStartPlayer)
-            updateState()
-            
-            // If AI starts (currentStartPlayer is NOT humanSymbol), trigger it
-            if (isVsAI && currentStartPlayer != humanSymbol) {
-                _isOpponentThinking.value = true
-                delay(800.milliseconds)
-                aiMove()
-                _isOpponentThinking.value = false
+                // Set human symbol based on first move preference
+                _humanSymbol.value = when (prefs.firstMoveBehavior) {
+                    FirstMoveBehavior.PLAYER_X -> prefs.p1Symbol
+                    FirstMoveBehavior.PLAYER_O -> prefs.p2Symbol
+                    else -> prefs.p1Symbol
+                }
+
+                val startChar = when (prefs.firstMoveBehavior) {
+                    FirstMoveBehavior.PLAYER_X -> 'X'
+                    FirstMoveBehavior.PLAYER_O -> 'O'
+                    FirstMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
+                }
+                
+                logic.resetGame(startChar)
+                updateState()
+                
+                // Trigger AI if it starts
+                val isHumanP1 = _humanSymbol.value == _p1Symbol.value
+                val aiChar = if (isHumanP1) 'O' else 'X'
+                
+                if (isVsAI && startChar == aiChar) {
+                    _isOpponentThinking.value = true
+                    delay(800.milliseconds)
+                    aiMove()
+                    _isOpponentThinking.value = false
+                }
             }
         }
     }
@@ -133,6 +168,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun triggerHaptic(type: String) {
+        if (!hapticEnabled.value) return
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(VibratorManager::class.java)
             vibratorManager?.defaultVibrator ?: return
@@ -166,8 +202,10 @@ class GameViewModel @Inject constructor(
     fun onCellClicked(index: Int) {
         if (_isOpponentThinking.value || _isPaused.value) return
         
-        // Logical Turn Guard: Only allow interaction if it's the intended player's turn.
-        if (isVsAI && logic.currentPlayer != humanSymbol) return
+        val isHumanP1 = _humanSymbol.value == _p1Symbol.value
+        val humanChar = if (isHumanP1) 'X' else 'O'
+        
+        if (isVsAI && logic.currentPlayer != humanChar) return
 
         val current = _state.value
         if (current.winner != null || current.board[index] != null) return
@@ -176,9 +214,9 @@ class GameViewModel @Inject constructor(
             soundManager.playSound("move")
             triggerHaptic("move")
             checkAndHandleResult()
+            saveHistory()
             
-            // Trigger AI if match is ongoing and it's AI's turn (currentPlayer != humanSymbol)
-            if (logic.winner == null && isVsAI && logic.currentPlayer != humanSymbol) {
+            if (logic.winner == null && isVsAI && logic.currentPlayer != humanChar) {
                 viewModelScope.launch {
                     _isOpponentThinking.value = true
                     delay(500.milliseconds)
@@ -204,15 +242,16 @@ class GameViewModel @Inject constructor(
             soundManager.playSound("move")
             triggerHaptic("move")
             checkAndHandleResult()
+            saveHistory()
         }
     }
 
     private fun checkAndHandleResult() {
-        val winner = logic.winner
+        val winnerChar = logic.winner
         val s = _state.value
 
-        if (winner != null) {
-            when (winner) {
+        if (winnerChar != null) {
+            when (winnerChar) {
                 'X' -> { soundManager.playSound("win"); triggerHaptic("win") }
                 'O' -> { soundManager.playSound("lose"); triggerHaptic("move") }
                 'D' -> { soundManager.playSound("draw"); triggerHaptic("move") }
@@ -220,34 +259,39 @@ class GameViewModel @Inject constructor(
         }
 
         _state.value = s.copy(
-            board = logic.getBoard(),
-            currentPlayer = logic.currentPlayer,
-            winner = winner,
+            board = mapBoardToSymbols(logic.getBoard()),
+            currentPlayer = mapCharToSymbol(logic.currentPlayer),
+            winner = winnerChar?.let { mapCharToSymbol(it) },
             winLine = logic.winLine,
             lastMove = logic.lastMove,
-            xWins = s.xWins + if (winner == 'X') 1 else 0,
-            oWins = s.oWins + if (winner == 'O') 1 else 0,
-            draws = s.draws + if (winner == 'D') 1 else 0
+            xWins = s.xWins + if (winnerChar == 'X') 1 else 0,
+            oWins = s.oWins + if (winnerChar == 'O') 1 else 0,
+            draws = s.draws + if (winnerChar == 'D') 1 else 0
         )
     }
 
+    private fun mapCharToSymbol(c: Char): String = if (c == 'X') _p1Symbol.value else if (c == 'O') _p2Symbol.value else c.toString()
+    private fun mapBoardToSymbols(board: List<Char?>): List<String?> = board.map { it?.let { mapCharToSymbol(it) } }
+
     fun restartGame() {
+        isMatchSaved = false
         viewModelScope.launch {
-            val nextPlayer = calculateNextStartingPlayer()
-            currentStartPlayer = nextPlayer
+            val nextChar = calculateNextStartingPlayerChar()
+            logic.resetGame(nextChar)
             
-            logic.resetGame(nextPlayer)
             _state.value = _state.value.copy(
                 board = List(boardSize.x * boardSize.y * boardSize.z) { null },
-                currentPlayer = nextPlayer,
+                currentPlayer = mapCharToSymbol(nextChar),
                 winner = null,
                 winLine = null,
                 lastMove = null
             )
             _activeLayer.value = 0
             
-            // If AI starts the new round (nextPlayer is NOT humanSymbol)
-            if (isVsAI && nextPlayer != humanSymbol) {
+            val isHumanP1 = _humanSymbol.value == _p1Symbol.value
+            val aiChar = if (isHumanP1) 'O' else 'X'
+
+            if (isVsAI && nextChar == aiChar) {
                 _isOpponentThinking.value = true
                 delay(600.milliseconds)
                 aiMove()
@@ -256,32 +300,28 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    private suspend fun calculateNextStartingPlayer(): Char {
+    private suspend fun calculateNextStartingPlayerChar(): Char {
         val currentState = _state.value
         val nextMovePref = preferences.nextMoveBehaviorFlow.first()
         val firstMovePref = preferences.firstMoveBehaviorFlow.first()
 
-        if (currentState.winner == null) {
-            return when (firstMovePref) {
-                FirstMoveBehavior.PLAYER_X -> 'X'
-                FirstMoveBehavior.PLAYER_O -> 'O'
-                FirstMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
-            }
+        val startChar = when (firstMovePref) {
+            FirstMoveBehavior.PLAYER_X -> 'X'
+            FirstMoveBehavior.PLAYER_O -> 'O'
+            FirstMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
         }
 
+        if (currentState.winner == null) return startChar
+
         return when (nextMovePref) {
-            NextMoveBehavior.FIXED -> when (firstMovePref) {
-                FirstMoveBehavior.PLAYER_X -> 'X'
-                FirstMoveBehavior.PLAYER_O -> 'O'
-                FirstMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
-            }
-            NextMoveBehavior.ALTERNATING -> if (currentStartPlayer == 'X') 'O' else 'X'
+            NextMoveBehavior.FIXED -> startChar
+            NextMoveBehavior.ALTERNATING -> if (logic.currentPlayer == 'X') 'O' else 'X'
             NextMoveBehavior.WINNER_STARTS -> {
-                val w = currentState.winner
+                val w = logic.winner
                 if (w == 'X' || w == 'O') w else (if (Math.random() < 0.5) 'X' else 'O')
             }
             NextMoveBehavior.LOSER_STARTS -> {
-                val w = currentState.winner
+                val w = logic.winner
                 if (w == 'X') 'O' else if (w == 'O') 'X' else (if (Math.random() < 0.5) 'X' else 'O')
             }
             NextMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
@@ -295,9 +335,18 @@ class GameViewModel @Inject constructor(
         viewModelScope.launch {
             preferences.addGameHistory(
                 GameHistory(
+                    matchId = _state.value.matchId,
                     dateMillis = Date().time,
-                    mode = gameMode,
-                    state = _state.value
+                    difficulty = _aiDifficulty.value,
+                    gameMode = _gameMode.value,
+                    state = _state.value,
+                    humanSymbol = _humanSymbol.value,
+                    p1Symbol = _p1Symbol.value,
+                    p2Symbol = _p2Symbol.value,
+                    p1Name = _p1Name.value,
+                    p2Name = _p2Name.value,
+                    p1Color = _p1Color.value,
+                    p2Color = _p2Color.value
                 )
             )
         }
@@ -306,18 +355,50 @@ class GameViewModel @Inject constructor(
     private fun updateState() {
         val s = _state.value
         _state.value = s.copy(
-            board = logic.getBoard(),
-            currentPlayer = logic.currentPlayer,
-            winner = logic.winner,
+            board = mapBoardToSymbols(logic.getBoard()),
+            currentPlayer = mapCharToSymbol(logic.currentPlayer),
+            winner = logic.winner?.let { mapCharToSymbol(it) },
             winLine = logic.winLine,
             lastMove = logic.lastMove
         )
     }
 
     fun loadFromHistory(history: GameHistory) {
-        _state.value = history.state
-        logic.gameMode = history.mode
-        logic.setBoard(history.state.board, history.state.currentPlayer)
+        _p1Symbol.value = history.p1Symbol
+        _p2Symbol.value = history.p2Symbol
+        _p1Name.value = history.p1Name
+        _p2Name.value = history.p2Name
+        _p1Color.value = history.p1Color
+        _p2Color.value = history.p2Color
+        _humanSymbol.value = history.humanSymbol
+
+        _state.value = history.state.copy(matchId = history.matchId)
+        _gameMode.value = history.gameMode
+        _aiDifficulty.value = history.difficulty
+        logic.aiDifficulty = history.difficulty
+        
+        // Map symbols back to chars for logic
+        val logicBoard = history.state.board.map { 
+            if (it == history.p1Symbol) 'X' else if (it == history.p2Symbol) 'O' else null 
+        }
+        val logicCurrent = if (history.state.currentPlayer == history.p1Symbol) 'X' else 'O'
+        
+        logic.setBoard(logicBoard, logicCurrent, history.state.boardSize)
         _activeLayer.value = 0
+        
+        if (isVsAI && logic.currentPlayer != (if (history.humanSymbol == history.p1Symbol) 'X' else 'O') && logic.winner == null) {
+            viewModelScope.launch {
+                _isOpponentThinking.value = true
+                delay(600.milliseconds)
+                aiMove()
+                _isOpponentThinking.value = false
+            }
+        }
+    }
+
+    override fun onCleared() {
+        if (_state.value.winner == null && _state.value.board.any { it != null }) {
+             saveHistory()
+        }
     }
 }

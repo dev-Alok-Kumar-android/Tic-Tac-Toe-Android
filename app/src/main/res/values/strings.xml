@@ -33,8 +33,38 @@
     <string name="player_o">Player O</string>
     <string name="ai_o">AI (O)</string>
     <string name="draws">Draws</string>
+    <string name="clear_history_title">Clear History</string>
+    <string name="delete_confirm_message">Delete %1$d items permanently?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="no_history">No history yet.</string>
+    <string name="no_matches_found">No matches found for this filter.</string>
+    <string name="reset_filters">Reset Filters</string>
+    <string name="total_games">Total Games</string>
+    <string name="win_rate">Win Rate</string>
+    <string name="history_title">Game History</string>
+    <string name="clear_all">Clear All</string>
+    <string name="filter_all">All</string>
+    <string name="filter_pvp">PvP</string>
+    <string name="filter_ai">vs AI</string>
+    <string name="grid_size">Grid: %1$s</string>
+    <string name="status_ongoing">Ongoing</string>
+    <string name="status_finished">Finished</string>
+    <string name="match_in_progress">Match in Progress</string>
+    <string name="filter_status">Status</string>
+    <string name="filter_difficulty">Difficulty</string>
+    <string name="advanced_filters">Advanced Filters</string>
+    <string name="apply">Apply</string>
 
     <!-- Settings -->
+    <!-- Settings Categories -->
+    <string name="category_gameplay">Gameplay Rules</string>
+    <string name="category_ai">AI Opponent</string>
+    <string name="category_board">Board Setup</string>
+    <string name="category_audio_feedback">Audio &amp; Feedback</string>
+    <string name="category_appearance">Appearance</string>
+    <string name="category_system">System</string>
+
     <string name="language">Language</string>
     <string name="theme">Theme</string>
     <string name="orientation">Orientation</string>
@@ -43,11 +73,18 @@
     <string name="immersive">FullScreen Mode</string>
     <string name="dynamic_color">Dynamic Color</string>
     <string name="bg_animation">Background Animations</string>
+    <string name="haptics">Haptic Feedback (Vibration)</string>
+    <string name="match_mode">Match Mode</string>
     <string name="ai_skill_level">AI Skill Level: %1$d</string>
     <string name="advanced_ai">Advanced AI Settings</string>
     <string name="manual_depth">Manual Search Depth: %1$d</string>
     <string name="depth_warning">Warning: High depth (> 8) on large boards can be very slow!</string>
     <string name="developed_by">Developed by Alok Kumar</string>
+    <string name="category_player_customization">Player Customization</string>
+    <string name="player_name">Player Name</string>
+    <string name="player_symbol">Symbol (Char/Emoji)</string>
+    <string name="player_color">Pick Color</string>
+    <string name="symbol_conflict_warning">Symbols must be different!</string>
     <string name="paused">Paused</string>
     <string name="home">Home</string>
     <string name="resume_game">Resume Game</string>
@@ -65,4 +102,13 @@
     <string name="more_details">More exciting games and apps are coming soon! Stay tuned.</string>
     <string name="increase">Increase</string>
     <string name="decrease">Decrease</string>
+    <string name="layer_down">Layer Down</string>
+    <string name="layer_up">Layer Up</string>
+    <string name="layers_list">Layers List</string>
+    <string name="jump_to_last">Jump to Last Played</string>
+    <string name="mode_pvp">PvP</string>
+    <string name="mode_easy">Easy</string>
+    <string name="mode_medium">Medium</string>
+    <string name="mode_hard">Hard</string>
+    <string name="mode_impossible">Impossible</string>
 </resources>

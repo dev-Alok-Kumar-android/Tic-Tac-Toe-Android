@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * Represents persistent configuration choices made by the user within settings.
  *
- * @property gameMode The active difficulty mode/AI mode (e.g. PvP, Easy, Medium, Hard).
+ * @property aiDifficulty The active difficulty mode for the AI (e.g. Easy, Medium, Hard).
  * @property boardSize Grid dimensions (X, Y, Z coordinates) and winning streak condition.
  * @property theme App UI styling theme (Light, Dark, or System default).
  * @property bgmEnabled True if looping background music track is enabled.
@@ -18,10 +18,15 @@ import kotlinx.serialization.Serializable
  * @property appLanguage Active locale selection for application text.
  * @property firstMoveBehavior Who starts the very first game of a session.
  * @property nextMoveBehavior Logic for who starts subsequent games in a session.
+ * @property aiStrength Granular AI skill level (1-100).
+ * @property isAdvancedAiEnabled If true, allows manual search depth override.
+ * @property manualMaxDepth User-defined maximum Minimax search depth.
+ * @property hapticEnabled True if tactile vibration feedback is active.
+ * @property gameMode High-level match category (PvP vs vs AI).
  */
 @Serializable
 data class UserPreferences(
-    val gameMode: GameMode = GameMode.HARD,
+    val aiDifficulty: AiDifficulty = AiDifficulty.HARD,
     val boardSize: BoardSize = BoardSize(),
     val theme: AppTheme = AppTheme.SYSTEM,
     val bgmEnabled: Boolean = true,
@@ -36,23 +41,36 @@ data class UserPreferences(
     val nextMoveBehavior: NextMoveBehavior = NextMoveBehavior.ALTERNATING,
     val aiStrength: Int = 75,
     val isAdvancedAiEnabled: Boolean = false,
-    val manualMaxDepth: Int = 6
+    val manualMaxDepth: Int = 6,
+    val hapticEnabled: Boolean = true,
+    val gameMode: GameMode = GameMode.VS_AI,
+    val p1Symbol: String = "X",
+    val p2Symbol: String = "O",
+    val p1Name: String = "Player 1",
+    val p2Name: String = "Player 2",
+    val p1Color: Long = 0xFFE91E63, // Default Secondary
+    val p2Color: Long = 0xFF2196F3  // Default Tertiary
 )
 
 /**
- * Game session modes defining AI difficulty levels or local versus modes.
+ * High-level match categories.
  */
 @Serializable
 enum class GameMode {
-    /** Player-versus-Player local multiplayer. */
+    /** Local human vs human. */
     PVP,
-    /** Low difficulty AI opponent that selects completely random cells. */
+    /** Local human vs automated engine. */
+    VS_AI
+}
+
+/**
+ * Game session modes defining AI difficulty levels.
+ */
+@Serializable
+enum class AiDifficulty {
     EASY,
-    /** Moderate difficulty AI opponent that checks for direct win/blocks. */
     MEDIUM,
-    /** Challenging difficulty AI utilizing Minimax with Alpha-Beta pruning. */
     HARD,
-    /** Perfectly optimal play where losing is mathematically impossible. */
     IMPOSSIBLE
 }
 

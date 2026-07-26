@@ -24,7 +24,6 @@ import androidx.navigation.compose.rememberNavController
 import com.tuto.alokkumar.tictactoe.core.navigation.BoardSizeNavType
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.GameHistory
-import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.data.Orientation
 import com.tuto.alokkumar.tictactoe.ui.components.ImmersiveMode
 import com.tuto.alokkumar.tictactoe.ui.screens.AboutScreen
@@ -107,7 +106,7 @@ fun AppNavigation(
                     onStartGame = { selectedMode, size -> navController.navigate(Route.Game(selectedMode, size)) },
                     onViewStats = { navController.navigate(Route.History) },
                     onExit = { activity?.finish() },
-                    onPvpMode = { size -> navController.navigate(Route.Game(GameMode.PVP, size)) },
+                    onPvpMode = { size -> navController.navigate(Route.Game(null, size)) },
                     onSettings = { navController.navigate(Route.Settings) },
                     onAbout = { navController.navigate(Route.About) })
             }

@@ -1,7 +1,7 @@
 package com.tuto.alokkumar.tictactoe.domain
 
+import com.tuto.alokkumar.tictactoe.data.AiDifficulty
 import com.tuto.alokkumar.tictactoe.data.BoardSize
-import com.tuto.alokkumar.tictactoe.data.GameMode
 import kotlin.math.pow
 
 /**
@@ -18,7 +18,7 @@ object AiMove {
     fun getBestMove(
         board: List<Char?>,
         ai: Char,
-        gameMode: GameMode,
+        difficulty: AiDifficulty,
         boardSize: BoardSize,
         winLines: List<List<Int>>,
         strength: Int = 100,
@@ -30,33 +30,30 @@ object AiMove {
         if (moves.isEmpty()) return null
 
         // 1. Skill Level Randomness: Lower strength increases chance of a non-optimal random move.
-        // Formula: strength 100 -> 0% error, strength 1 -> 90% error
         val errorChance = (100 - strength) * 0.9 / 100.0
-        if (Math.random() < errorChance && gameMode != GameMode.IMPOSSIBLE) {
+        if (Math.random() < errorChance && difficulty != AiDifficulty.IMPOSSIBLE) {
             return moves.random()
         }
 
-        return when (gameMode) {
-            GameMode.EASY -> moves.random()
-            GameMode.MEDIUM -> mediumMove(board, ai, winLines)
-            GameMode.HARD, GameMode.IMPOSSIBLE -> {
-                // Determine max depth based on complexity OR manual override
+        return when (difficulty) {
+            AiDifficulty.EASY -> moves.random()
+            AiDifficulty.MEDIUM -> mediumMove(board, ai, winLines)
+            AiDifficulty.HARD, AiDifficulty.IMPOSSIBLE -> {
                 val totalCells = boardSize.x * boardSize.y * boardSize.z
                 val maxDepth = if (isManualDepth) {
                     manualDepth 
-                } else if (gameMode == GameMode.IMPOSSIBLE && totalCells <= 9) {
-                    9 // Always perfect for 3x3
+                } else if (difficulty == AiDifficulty.IMPOSSIBLE && totalCells <= 9) {
+                    9 
                 } else {
                     when {
-                        totalCells <= 9 -> 9  // Full search for 3x3
-                        totalCells <= 16 -> 6 // 4x4
-                        totalCells <= 25 -> 4 // 5x5
-                        else -> 3 // Very large or 3D 3x3x3 (27 cells)
+                        totalCells <= 9 -> 9
+                        totalCells <= 16 -> 6
+                        totalCells <= 25 -> 4
+                        else -> 3
                     }
                 }
                 optimizedMinimaxMove(board.toMutableList(), ai, winLines, boardSize, maxDepth)
             }
-            else -> moves.random()
         }
     }
 
@@ -73,7 +70,6 @@ object AiMove {
         var bestScore = Int.MIN_VALUE
         val bestMoves = mutableListOf<Int>()
 
-        // Use symmetry to reduce initial branching
         val evaluatedSymmetries = mutableSetOf<String>()
 
         for (i in emptyCells) {
@@ -122,7 +118,6 @@ object AiMove {
     ): Int {
         val player = if (ai == 'X') 'O' else 'X'
         
-        // Cache Check
         val canonical = BoardSymmetry.getCanonicalForm(board, boardSize)
         val cacheKey = "$canonical:$isMax:$depth"
         transpositionTable[cacheKey]?.let { return it }
@@ -172,7 +167,7 @@ object AiMove {
 
     private fun putInCache(key: String, value: Int) {
         if (transpositionTable.size >= MAX_TABLE_SIZE) {
-            transpositionTable.clear() // Simple purge when full
+            transpositionTable.clear()
         }
         transpositionTable[key] = value
     }
@@ -207,15 +202,12 @@ object AiMove {
         val player = if (ai == 'X') 'O' else 'X'
         val emptyCells = board.indices.filter { board[it] == null }
 
-        // 1. Win
         for (i in emptyCells) {
             if (wouldWin(board, i, ai, winLines)) return i
         }
-        // 2. Block
         for (i in emptyCells) {
             if (wouldWin(board, i, player, winLines)) return i
         }
-        // 3. Center/Random
         return if (board.size > 4 && board[board.size / 2] == null) board.size / 2 else emptyCells.random()
     }
 

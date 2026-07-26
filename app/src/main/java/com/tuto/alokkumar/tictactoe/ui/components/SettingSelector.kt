@@ -39,6 +39,7 @@ fun SettingSelector(
     title: String? = null,
     dataList: List<Any>,
     selected: Any,
+    labelMapper: @Composable (Any) -> String = { it.toString() },
     onItemSelect: (selected: Any) -> Unit,
 ) {
     val expanded = remember { mutableStateOf(false) }
@@ -57,7 +58,7 @@ fun SettingSelector(
                 .padding(horizontal = 12.dp, vertical = 8.dp)) {
             Text(title ?: "", style = MaterialTheme.typography.titleMedium)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(selected.toString(), style = MaterialTheme.typography.bodyLarge)
+                Text(labelMapper(selected), style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.padding(4.dp))
                 Icon(
                     imageVector = if (expanded.value) MyIcons.KeyboardArrowUp else MyIcons.KeyboardArrowDown,
@@ -87,7 +88,7 @@ fun SettingSelector(
                         RadioButton(selected = data == selected, onClick = {
                             onItemSelect(data)
                         })
-                        Text(data.toString(), style = MaterialTheme.typography.bodyLarge)
+                        Text(labelMapper(data), style = MaterialTheme.typography.bodyLarge)
                     }
                 }
                 HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)

@@ -41,6 +41,10 @@ fun ScoreBoard(
     xWins: Int,
     oWins: Int,
     draws: Int,
+    p1Name: String,
+    p2Name: String,
+    p1Symbol: String,
+    p2Symbol: String,
     isPlayerOAI: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -62,7 +66,8 @@ fun ScoreBoard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             ScoreItem(
-                title = stringResource(R.string.player_x),
+                title = p1Name,
+                subtitle = p1Symbol,
                 score = xWins,
                 color = MaterialTheme.colorScheme.secondary,
                 icon = MyIcons.Person
@@ -75,6 +80,7 @@ fun ScoreBoard(
             
             ScoreItem(
                 title = stringResource(R.string.draws),
+                subtitle = null,
                 score = draws,
                 color = MaterialTheme.colorScheme.outline,
                 icon = MyIcons.Star
@@ -86,7 +92,8 @@ fun ScoreBoard(
             )
             
             ScoreItem(
-                title = if (isPlayerOAI) stringResource(R.string.ai_o) else stringResource(R.string.player_o),
+                title = if (isPlayerOAI) stringResource(R.string.ai_o) else p2Name,
+                subtitle = p2Symbol,
                 score = oWins,
                 color = MaterialTheme.colorScheme.tertiary,
                 icon = if (isPlayerOAI) MyIcons.Face else MyIcons.Person
@@ -99,7 +106,7 @@ fun ScoreBoard(
  * Individual score metric item representing a participant or ties.
  */
 @Composable
-private fun ScoreItem(title: String, score: Int, color: Color, icon: ImageVector) {
+private fun ScoreItem(title: String, subtitle: String?, score: Int, color: Color, icon: ImageVector) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -115,8 +122,17 @@ private fun ScoreItem(title: String, score: Int, color: Color, icon: ImageVector
             color = color,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.labelMedium
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1
         )
+        if (subtitle != null) {
+            Text(
+                text = "($subtitle)",
+                color = color.copy(alpha = 0.7f),
+                fontSize = 10.sp,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
         Text(
             text = score.toString(),
             color = color,

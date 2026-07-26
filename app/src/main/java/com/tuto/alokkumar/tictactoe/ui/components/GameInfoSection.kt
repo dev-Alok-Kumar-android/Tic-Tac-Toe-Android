@@ -8,6 +8,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -16,35 +17,38 @@ import androidx.compose.ui.unit.dp
 import com.tuto.alokkumar.tictactoe.R
 
 /**
- * Renders game status announcements including active turns, win/draw banners,
- * opponent thinking progress loaders, and a restart game action button.
- *
- * @param currentPlayer Character token indicating whose turn it currently is ('X' or 'O').
- * @param winner Flat indicator representing final match results: 'X', 'O', 'D' (Draw), or null if match is active.
- * @param isOpponentThinking Flag indicating if the background thread is calculating a move.
- * @param isPlayerOAI Flag indicating if Player O is an AI opponent.
- * @param modifier Modifier applied to the parent column container.
- * @param onRestart Callback event triggered when tapping the restart button.
+ * Renders game status announcements including active turns, win/draw banners.
  */
 @Composable
 fun GameInfoSection(
-    currentPlayer: Char,
-    winner: Char?,
-    isOpponentThinking: Boolean,
-    isPlayerOAI: Boolean,
+    currentPlayerSymbol: String,
+    winnerSymbol: String?,
+    isAiTurn: Boolean,
+    p1Name: String,
+    p2Name: String,
+    p1Symbol: String,
+    p2Symbol: String,
     modifier: Modifier = Modifier,
     onRestart: () -> Unit
 ) {
+    val currentPlayerName = remember(currentPlayerSymbol, p1Symbol, p2Symbol, p1Name, p2Name) {
+        if (currentPlayerSymbol == p1Symbol) p1Name else p2Name
+    }
+    
+    val winnerName = remember(winnerSymbol, p1Symbol, p2Symbol, p1Name, p2Name) {
+        if (winnerSymbol == p1Symbol) p1Name else if (winnerSymbol == p2Symbol) p2Name else winnerSymbol
+    }
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        AnimatedVisibility(visible = winner == null) {
-            val turnText = if (isPlayerOAI && currentPlayer == 'O') {
+        AnimatedVisibility(visible = winnerSymbol == null) {
+            val turnText = if (isAiTurn) {
                 stringResource(R.string.opponent_thinking)
             } else {
-                stringResource(R.string.turn_label, currentPlayer.toString())
+                stringResource(R.string.turn_label, "$currentPlayerName ($currentPlayerSymbol)")
             }
             Text(
                 text = turnText,
@@ -53,11 +57,11 @@ fun GameInfoSection(
             )
         }
         
-        AnimatedVisibility(visible = winner != null) {
-            val winText = if (winner == 'D') {
+        AnimatedVisibility(visible = winnerSymbol != null) {
+            val winText = if (winnerSymbol == "D") {
                 stringResource(R.string.draw_message)
             } else {
-                stringResource(R.string.winner_label, winner.toString())
+                stringResource(R.string.winner_label, "$winnerName ($winnerSymbol)")
             }
             Text(
                 text = winText,
@@ -73,16 +77,6 @@ fun GameInfoSection(
             modifier = Modifier.padding(top = 8.dp)
         ) {
             Text(stringResource(R.string.restart_match), style = MaterialTheme.typography.bodyLarge)
-        }
-
-        AnimatedVisibility(isOpponentThinking) {
-            Text(
-                stringResource(R.string.analyzing),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(12.dp),
-                fontWeight = FontWeight.Medium
-            )
         }
     }
 }

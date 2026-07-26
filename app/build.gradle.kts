@@ -14,8 +14,8 @@ android {
         applicationId = "com.tuto.alokkumar.tictactoe"
         minSdk = 25
         targetSdk = 37
-        versionCode = 5
-        versionName = "2.3.0"
+        versionCode = 10
+        versionName = "3.0.0-alpha"
     }
 
     buildTypes {

@@ -1,6 +1,6 @@
 package com.tuto.alokkumar.tictactoe
 
-import com.tuto.alokkumar.tictactoe.data.GameMode
+import com.tuto.alokkumar.tictactoe.data.AiDifficulty
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,7 +10,7 @@ sealed interface Route {
 
     @Serializable
     data class Game(
-        val mode: GameMode,
+        val mode: AiDifficulty?,
         val boardSize: com.tuto.alokkumar.tictactoe.data.BoardSize
     ) : Route
 

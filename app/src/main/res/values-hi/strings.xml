@@ -33,8 +33,38 @@
     <string name="player_o">खिलाड़ी O</string>
     <string name="ai_o">AI (O)</string>
     <string name="draws">बराबरी</string>
+    <string name="clear_history_title">इतिहास साफ़ करें</string>
+    <string name="delete_confirm_message">क्या आप वाकई %1$d आइटम को हमेशा के लिए हटाना चाहते हैं?</string>
+    <string name="yes">हाँ</string>
+    <string name="no">नहीं</string>
+    <string name="no_history">अभी तक कोई इतिहास नहीं है।</string>
+    <string name="no_matches_found">इस फिल्टर के लिए कोई मैच नहीं मिला।</string>
+    <string name="reset_filters">फिल्टर हटाएं</string>
+    <string name="total_games">कुल खेल</string>
+    <string name="win_rate">जीत की दर</string>
+    <string name="history_title">खेल का इतिहास</string>
+    <string name="clear_all">सब साफ करें</string>
+    <string name="filter_all">सभी</string>
+    <string name="filter_pvp">दोस्त</string>
+    <string name="filter_ai">AI</string>
+    <string name="grid_size">ग्रिड: %1$s</string>
+    <string name="status_ongoing">अधूरा</string>
+    <string name="status_finished">पूरा</string>
+    <string name="match_in_progress">मैच चल रहा है</string>
+    <string name="filter_status">स्थिति</string>
+    <string name="filter_difficulty">कठिनाई</string>
+    <string name="advanced_filters">एडवांस फिल्टर</string>
+    <string name="apply">लागू करें</string>
 
     <!-- Settings -->
+    <!-- Settings Categories -->
+    <string name="category_gameplay">खेल के नियम</string>
+    <string name="category_ai">AI प्रतिद्वंद्वी</string>
+    <string name="category_board">बोर्ड सेटअप</string>
+    <string name="category_audio_feedback">ऑडियो और फीडबैक</string>
+    <string name="category_appearance">दिखावट</string>
+    <string name="category_system">सिस्टम</string>
+
     <string name="language">भाषा</string>
     <string name="theme">थीम</string>
     <string name="orientation">स्क्रीन ओरिएंटेशन</string>
@@ -43,11 +73,18 @@
     <string name="immersive">फुलस्क्रीन मोड</string>
     <string name="dynamic_color">डायनामिक रंग</string>
     <string name="bg_animation">बैकग्राउंड एनिमेशन</string>
+    <string name="haptics">हैप्टिक फीडबैक (कंपन)</string>
+    <string name="match_mode">मैच मोड</string>
     <string name="ai_skill_level">AI कौशल स्तर: %1$d</string>
     <string name="advanced_ai">एडवांस AI सेटिंग्स</string>
     <string name="manual_depth">मैनुअल सर्च गहराई: %1$d</string>
     <string name="depth_warning">चेतावनी: बड़े बोर्ड पर गहराई (> 8) बहुत धीमी हो सकती है!</string>
     <string name="developed_by">आलोक कुमार द्वारा विकसित</string>
+    <string name="category_player_customization">प्लेयर कस्टमाइजेशन</string>
+    <string name="player_name">खिलाड़ी का नाम</string>
+    <string name="player_symbol">प्रतीक (अक्षर/इमोजी)</string>
+    <string name="player_color">रंग चुनें</string>
+    <string name="symbol_conflict_warning">प्रतीक अलग-अलग होने चाहिए!</string>
     <string name="paused">रुका हुआ</string>
     <string name="home">होम</string>
     <string name="resume_game">खेल जारी रखें</string>
@@ -65,4 +102,13 @@
     <string name="more_details">अधिक रोमांचक खेल और ऐप्स जल्द ही आ रहे हैं! बने रहें।</string>
     <string name="increase">बढ़ाएं</string>
     <string name="decrease">घटाएं</string>
+    <string name="layer_down">निचली परत</string>
+    <string name="layer_up">ऊपरी परत</string>
+    <string name="layers_list">परतों की सूची</string>
+    <string name="jump_to_last">आखरी चाल पर जाएं</string>
+    <string name="mode_pvp">खिलाड़ी बनाम खिलाड़ी</string>
+    <string name="mode_easy">आसान</string>
+    <string name="mode_medium">सामान्य</string>
+    <string name="mode_hard">कठिन</string>
+    <string name="mode_impossible">असंभव</string>
 </resources>

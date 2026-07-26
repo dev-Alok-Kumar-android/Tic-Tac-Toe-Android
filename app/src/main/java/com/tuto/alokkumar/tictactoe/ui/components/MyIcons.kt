@@ -25,9 +25,6 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Unique "Cyber-Grid" icon collection for Tic Tac Toe.
- * 
- * Refined V2: Bolder, cleaner geometric shapes with high-contrast recognition.
- * Strictly constrained to 24x24 viewport for perfect rendering across devices.
  */
 object MyIcons {
 
@@ -392,7 +389,7 @@ object MyIcons {
                 horizontalLineToRelative(-3.5f)
                 lineTo(12f, 1f)
                 close()
-                
+
                 // Central Hollow (creates a gear look)
                 moveTo(12f, 15.5f)
                 curveToRelative(-1.93f, 0f, -3.5f, -1.57f, -3.5f, -3.5f)
@@ -400,7 +397,7 @@ object MyIcons {
                 reflectiveCurveToRelative(3.5f, 1.57f, 3.5f, 3.5f)
                 reflectiveCurveToRelative(-1.57f, 3.5f, -3.5f, 3.5f)
                 close()
-                
+
                 // Core Pin
                 moveTo(12f, 10.5f)
                 curveToRelative(-0.83f, 0f, -1.5f, 0.67f, -1.5f, 1.5f)
@@ -563,6 +560,116 @@ object MyIcons {
                 close()
             }
         }.build()
+
+    /** Multi-select Done/Check */
+    val Done: ImageVector
+        get() = ImageVector.Builder(
+            name = "Done",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(9f, 16.2f)
+                lineTo(4.8f, 12f)
+                lineToRelative(-1.4f, 1.4f)
+                lineTo(9f, 19f)
+                lineTo(21f, 7f)
+                lineToRelative(-1.4f, -1.4f)
+                lineTo(9f, 16.2f)
+                close()
+            }
+        }.build()
+
+    /** Multi-select Delete/Trash */
+    val Delete: ImageVector
+        get() = ImageVector.Builder(
+            name = "Delete",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(6f, 19f)
+                curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+                horizontalLineToRelative(8f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                verticalLineTo(7f)
+                horizontalLineTo(6f)
+                verticalLineTo(19f)
+                close()
+                moveTo(19f, 4f)
+                horizontalLineToRelative(-3.5f)
+                lineToRelative(-1f, -1f)
+                horizontalLineToRelative(-5f)
+                lineToRelative(-1f, 1f)
+                horizontalLineTo(5f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(14f)
+                verticalLineTo(4f)
+                close()
+            }
+        }.build()
+
+    val Close: ImageVector
+        get() = ImageVector.Builder(
+            name = "Close",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(19f, 6.41f)
+                lineTo(17.59f, 5f)
+                lineTo(12f, 10.59f)
+                lineTo(6.41f, 5f)
+                lineTo(5f, 6.41f)
+                lineTo(10.59f, 12f)
+                lineTo(5f, 17.59f)
+                lineTo(6.41f, 19f)
+                lineTo(12f, 13.41f)
+                lineTo(17.59f, 19f)
+                lineTo(19f, 17.59f)
+                lineTo(13.41f, 12f)
+                lineTo(19f, 6.41f)
+                close()
+            }
+        }.build()
+
+    /** Filter/Slider bars icon */
+    val Filter: ImageVector
+        get() = ImageVector.Builder(
+            name = "Filter",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(3f, 17f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(6f)
+                verticalLineToRelative(-2f)
+                lineTo(3f, 17f)
+                close()
+                moveTo(3f, 5f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(18f)
+                verticalLineToRelative(-2f)
+                lineTo(3f, 5f)
+                close()
+                moveTo(3f, 11f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(12f)
+                verticalLineToRelative(-2f)
+                lineTo(3f, 11f)
+                close()
+            }
+        }.build()
+
 }
 
 
@@ -585,7 +692,10 @@ fun IconPreviewList() {
         "Add" to MyIcons.Add,
         "Remove" to MyIcons.Remove,
         "Home" to MyIcons.Home,
-        "ArrowBack" to MyIcons.ArrowBack
+        "ArrowBack" to MyIcons.ArrowBack,
+        "Done" to MyIcons.Done,
+        "Delete" to MyIcons.Delete,
+        "Close" to MyIcons.Close
     )
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
