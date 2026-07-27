@@ -2,16 +2,17 @@ package com.tuto.alokkumar.tictactoe.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
 import com.tuto.alokkumar.tictactoe.data.AiDifficulty
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
 import com.tuto.alokkumar.tictactoe.data.GameStats
+import com.tuto.alokkumar.tictactoe.domain.usecase.ManageHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -26,7 +27,7 @@ enum class DifficultyFilter { ALL, EASY, MEDIUM, HARD, IMPOSSIBLE }
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val preferences: PreferencesManager
+    private val manageHistoryUseCase: ManageHistoryUseCase,
 ) : ViewModel() {
 
     private val _selectedItems = MutableStateFlow<Set<GameHistory>>(emptySet())
@@ -41,8 +42,10 @@ class HistoryViewModel @Inject constructor(
     private val _difficultyFilter = MutableStateFlow(DifficultyFilter.ALL)
     val difficultyFilter = _difficultyFilter.asStateFlow()
 
-    private val _history = preferences.getGameHistoryFlow().stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+    private val _history = manageHistoryUseCase.gameHistory.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
     )
 
     val isDatabaseEmpty = _history.map { it.isEmpty() }.stateIn(
@@ -59,8 +62,8 @@ class HistoryViewModel @Inject constructor(
             
             val statusMatch = when (s) {
                 StatusFilter.ALL -> true
-                StatusFilter.ONGOING -> item.state.winner == null
-                StatusFilter.FINISHED -> item.state.winner != null
+                StatusFilter.ONGOING -> item.state.winnerId == null && !item.state.isDraw
+                StatusFilter.FINISHED -> item.state.winnerId != null || item.state.isDraw
             }
             
             val difficultyMatch = if (f == HistoryFilter.PVP) true else {
@@ -78,23 +81,9 @@ class HistoryViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val stats = history.map { list ->
-        if (list.isEmpty()) return@map GameStats()
-        
-        var xWins = 0
-        var oWins = 0
-        var draws = 0
-        
-        list.forEach { h ->
-            xWins += h.state.xWins
-            oWins += h.state.oWins
-            draws += h.state.draws
-        }
-        
-        val total = xWins + oWins + draws
-        val winRate = if (total > 0) (xWins.toFloat() / total * 100).toInt() else 0
-        
-        GameStats(total, xWins, oWins, draws, winRate)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GameStats())
+        manageHistoryUseCase.getStats(list)
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GameStats())
 
     fun setFilter(newFilter: HistoryFilter) {
         _filter.value = newFilter
@@ -118,15 +107,17 @@ class HistoryViewModel @Inject constructor(
         clearSelection()
     }
 
+    @Suppress("unused")
     fun clearHistory() {
         viewModelScope.launch {
-            preferences.clearAllGameHistory()
+            manageHistoryUseCase.clearHistory()
         }
     }
 
+    @Suppress("unused")
     fun removeHistory(history: GameHistory) {
         viewModelScope.launch {
-            preferences.removeGameHistory(history)
+            manageHistoryUseCase.deleteGames(listOf(history.matchId))
         }
     }
 
@@ -146,7 +137,7 @@ class HistoryViewModel @Inject constructor(
     fun deleteSelected() {
         viewModelScope.launch {
             val ids = _selectedItems.value.map { it.matchId }
-            preferences.removeGameHistories(ids)
+            manageHistoryUseCase.deleteGames(ids)
             clearSelection()
         }
     }

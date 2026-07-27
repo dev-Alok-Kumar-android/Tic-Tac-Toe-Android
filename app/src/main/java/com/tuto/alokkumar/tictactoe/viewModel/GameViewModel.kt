@@ -1,51 +1,61 @@
 package com.tuto.alokkumar.tictactoe.viewModel
 
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.tuto.alokkumar.tictactoe.Route
 import com.tuto.alokkumar.tictactoe.core.navigation.BoardSizeNavType
-import com.tuto.alokkumar.tictactoe.core.pref.PreferencesManager
-import com.tuto.alokkumar.tictactoe.core.sound.SoundManager
 import com.tuto.alokkumar.tictactoe.data.AiDifficulty
 import com.tuto.alokkumar.tictactoe.data.BoardSize
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
-import com.tuto.alokkumar.tictactoe.data.GameState
-import com.tuto.alokkumar.tictactoe.data.NextMoveBehavior
-import com.tuto.alokkumar.tictactoe.domain.GameLogic
+import com.tuto.alokkumar.tictactoe.data.UserPreferences
+import com.tuto.alokkumar.tictactoe.domain.HardwareService
+import com.tuto.alokkumar.tictactoe.domain.mapper.MatchMapper
+import com.tuto.alokkumar.tictactoe.domain.model.GameFeedback
+import com.tuto.alokkumar.tictactoe.domain.model.GameState
+import com.tuto.alokkumar.tictactoe.domain.model.MatchResult
+import com.tuto.alokkumar.tictactoe.domain.model.Player
+import com.tuto.alokkumar.tictactoe.domain.model.PlayerId
+import com.tuto.alokkumar.tictactoe.domain.usecase.ComputeWinningLinesUseCase
+import com.tuto.alokkumar.tictactoe.domain.usecase.GetAiMoveUseCase
+import com.tuto.alokkumar.tictactoe.domain.usecase.ManageHistoryUseCase
+import com.tuto.alokkumar.tictactoe.domain.usecase.ManagePreferencesUseCase
+import com.tuto.alokkumar.tictactoe.domain.usecase.ProcessMoveUseCase
+import com.tuto.alokkumar.tictactoe.ui.model.GameStateUi
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.Date
 import javax.inject.Inject
 import kotlin.reflect.typeOf
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * State holding ViewModel for the active gameplay session.
+ * Professional Orchestrator for Tic Tac Toe matches.
+ * Reactive architecture that handles process death, heavy calculations, and ID-based logic.
  */
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
-    private val preferences: PreferencesManager,
-    private val soundManager: SoundManager,
-    savedStateHandle: SavedStateHandle
+    private val processMoveUseCase: ProcessMoveUseCase,
+    private val getAiMoveUseCase: GetAiMoveUseCase,
+    private val computeWinningLinesUseCase: ComputeWinningLinesUseCase,
+    private val manageHistoryUseCase: ManageHistoryUseCase,
+    private val managePreferencesUseCase: ManagePreferencesUseCase,
+    private val hardwareService: HardwareService,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val route = try { 
@@ -54,277 +64,332 @@ class GameViewModel @Inject constructor(
         ) 
     } catch (_: Exception) { null }
     
+    // --- MATCH CONFIGURATION (Reactive) ---
     private val _gameMode = MutableStateFlow(if (route?.mode == null) GameMode.PVP else GameMode.VS_AI)
     val gameMode = _gameMode.asStateFlow()
 
     private val _aiDifficulty = MutableStateFlow(route?.mode ?: AiDifficulty.HARD)
     val aiDifficulty = _aiDifficulty.asStateFlow()
 
-    private val boardSize: BoardSize = route?.boardSize ?: BoardSize()
-    private val logic = GameLogic(_aiDifficulty.value, boardSize)
+    private var winningLines = emptyList<List<Int>>() 
 
-    // Player Customization State (Session specific)
-    private val _p1Symbol = MutableStateFlow("X")
-    val p1Symbol = _p1Symbol.asStateFlow()
+    // --- PLAYER ABSTRACTION ---
+    private val _player1 = MutableStateFlow<Player?>(null)
+    private val _player2 = MutableStateFlow<Player?>(null)
 
-    private val _p2Symbol = MutableStateFlow("O")
-    val p2Symbol = _p2Symbol.asStateFlow()
+    val p1Symbol = _player1.map { it?.symbol ?: "X" }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "X")
+    val p1Name = _player1.map { it?.name ?: "Player 1" }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Player 1")
+    val p1Color = _player1.map { it?.color ?: 0xFFE91E63 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFFE91E63)
 
-    private val _p1Color = MutableStateFlow(0xFFE91E63)
-    val p1Color = _p1Color.asStateFlow()
-
-    private val _p2Color = MutableStateFlow(0xFF2196F3)
-    val p2Color = _p2Color.asStateFlow()
-
-    private val _p1Name = MutableStateFlow("Player 1")
-    val p1Name = _p1Name.asStateFlow()
-
-    private val _p2Name = MutableStateFlow("Player 2")
-    val p2Name = _p2Name.asStateFlow()
+    val p2Symbol = _player2.map { it?.symbol ?: "O" }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "O")
+    val p2Name = _player2.map { it?.name ?: "Player 2" }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Player 2")
+    val p2Color = _player2.map { it?.color ?: 0xFF2196F3 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFF2196F3)
 
     private val _humanSymbol = MutableStateFlow("X")
     val humanSymbol = _humanSymbol.asStateFlow()
 
     val isVsAI: Boolean get() = _gameMode.value == GameMode.VS_AI
-    val isPlayerOAI: Boolean get() = isVsAI && _humanSymbol.value == _p1Symbol.value
 
-    private val _state = MutableStateFlow(GameState(
-        board = List(boardSize.x * boardSize.y * boardSize.z) { null },
-        boardSize = boardSize
-    ))
-    val state = _state.asStateFlow()
+    // --- STATE MANAGEMENT ---
+    private val _domainState = MutableStateFlow(GameState(boardSize = route?.boardSize ?: BoardSize()))
 
-    private val isRestoring = route == null
-    private var isMatchSaved = false
+    val state: StateFlow<GameStateUi> = savedStateHandle.getStateFlow<GameStateUi?>(
+        "game_ui_state", 
+        null
+    ).map { savedUi ->
+        savedUi ?: MatchMapper.mapToUi(_domainState.value, p1Symbol.value, p2Symbol.value)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MatchMapper.mapToUi(_domainState.value, "X", "O"))
 
+    private fun updateUiState(newDomainState: GameState) {
+        _domainState.value = newDomainState
+        savedStateHandle["game_ui_state"] = MatchMapper.mapToUi(
+            newDomainState, p1Symbol.value, p2Symbol.value
+        )
+        // Auto-persist match ID to preferences whenever state changes, 
+        // ensuring Settings always knows about the active match.
+        viewModelScope.launch {
+            if (newDomainState.result is MatchResult.Ongoing) {
+                managePreferencesUseCase.updatePreferences { 
+                    if (it.activeMatchId != newDomainState.matchId) it.copy(activeMatchId = newDomainState.matchId) else it
+                }
+            }
+        }
+    }
+
+    // --- UI CONTROLS ---
     private val _isOpponentThinking = MutableStateFlow(false)
     val isOpponentThinking = _isOpponentThinking.asStateFlow()
     
+    private var aiTurnJob: kotlinx.coroutines.Job? = null
+
     private val _isPaused = MutableStateFlow(false)
     val isPaused = _isPaused.asStateFlow()
 
     private val _activeLayer = MutableStateFlow(0)
     val activeLayer = _activeLayer.asStateFlow()
 
-    val bgAnimationEnabled = preferences.bgAnimationEnabledFlow.stateIn(
+    val bgAnimationEnabled = managePreferencesUseCase.userPreferences.map { it.bgAnimationEnabled }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), false
     )
-
-    val boardStyle = preferences.boardStyleFlow.stateIn(
+    val boardStyle = managePreferencesUseCase.userPreferences.map { it.boardStyle }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), BoardStyle.LAYERED_3D
     )
-
-    private val hapticEnabled = preferences.hapticEnabledFlow.stateIn(
+    private val hapticEnabled = managePreferencesUseCase.userPreferences.map { it.hapticEnabled }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), true
     )
 
     init {
         viewModelScope.launch {
-            val prefs = preferences.userPreferencesFlow.first()
+            winningLines = computeWinningLinesUseCase(_domainState.value.boardSize)
             
-            // Only apply global defaults if we are NOT restoring from history
-            if (!isRestoring) {
-                _p1Symbol.value = prefs.p1Symbol
-                _p2Symbol.value = prefs.p2Symbol
-                _p1Name.value = prefs.p1Name
-                _p2Name.value = prefs.p2Name
-                _p1Color.value = prefs.p1Color
-                _p2Color.value = prefs.p2Color
-
-                // Set human symbol based on first move preference
-                _humanSymbol.value = when (prefs.firstMoveBehavior) {
-                    FirstMoveBehavior.PLAYER_X -> prefs.p1Symbol
-                    FirstMoveBehavior.PLAYER_O -> prefs.p2Symbol
-                    else -> prefs.p1Symbol
+            // 1. Initial Setup (One-time based on current prefs and saved state)
+            val initialPrefs = managePreferencesUseCase.userPreferences.first()
+            if (route?.mode == null) {
+                _aiDifficulty.value = initialPrefs.aiDifficulty
+                _gameMode.value = initialPrefs.gameMode
+            }
+            
+            val savedUi = savedStateHandle.get<GameStateUi>("game_ui_state")
+            if (savedUi == null) {
+                val startId = determineStartingPlayerId(initialPrefs)
+                val newMatchId = java.util.UUID.randomUUID().toString()
+                updateUiState(_domainState.value.copy(
+                    matchId = newMatchId,
+                    currentPlayerId = startId
+                ))
+                managePreferencesUseCase.updatePreferences { it.copy(activeMatchId = newMatchId) }
+            } else {
+                restoreDomainState(savedUi)
+                // Ensure the active match ID is synced if it was lost (e.g. process death)
+                if (initialPrefs.activeMatchId != savedUi.matchId) {
+                    managePreferencesUseCase.updatePreferences { it.copy(activeMatchId = savedUi.matchId) }
                 }
+            }
 
-                val startChar = when (prefs.firstMoveBehavior) {
-                    FirstMoveBehavior.PLAYER_X -> 'X'
-                    FirstMoveBehavior.PLAYER_O -> 'O'
-                    FirstMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
+            // 2. Reactive Player Sync (Only visual properties should sync live)
+            managePreferencesUseCase.userPreferences.collect { prefs ->
+                initializePlayers(prefs)
+            }
+        }
+        observeTurnLoop()
+    }
+
+    private fun restoreDomainState(savedUi: GameStateUi) {
+        _domainState.value = GameState(
+            matchId = savedUi.matchId,
+            boardSize = savedUi.boardSize,
+            board = savedUi.board.map { sym ->
+                when(sym) {
+                    p1Symbol.value -> PlayerId.P1
+                    p2Symbol.value -> PlayerId.P2
+                    else -> null
                 }
-                
-                logic.resetGame(startChar)
-                updateState()
-                
-                // Trigger AI if it starts
-                val isHumanP1 = _humanSymbol.value == _p1Symbol.value
-                val aiChar = if (isHumanP1) 'O' else 'X'
-                
-                if (isVsAI && startChar == aiChar) {
-                    _isOpponentThinking.value = true
-                    delay(800.milliseconds)
-                    aiMove()
-                    _isOpponentThinking.value = false
+            },
+            currentPlayerId = if (savedUi.currentPlayerSymbol == p1Symbol.value) PlayerId.P1 else PlayerId.P2,
+            result = when(savedUi.winnerSymbol) {
+                p1Symbol.value -> MatchResult.Winner(PlayerId.P1)
+                p2Symbol.value -> MatchResult.Winner(PlayerId.P2)
+                "D" -> MatchResult.Draw
+                else -> MatchResult.Ongoing
+            },
+            winLine = savedUi.winLine,
+            lastMove = savedUi.lastMove,
+            p1Wins = savedUi.p1Wins,
+            p2Wins = savedUi.p2Wins,
+            draws = savedUi.draws
+        )
+    }
+
+    private fun initializePlayers(prefs: UserPreferences) {
+        val existingAi = _player2.value as? Player.Ai
+        val currentState = _domainState.value
+        val isGameStarted = currentState.board.any { it != null } && currentState.result is MatchResult.Ongoing
+
+        // 1. Update Player 1 (Local)
+        _player1.value = if (isGameStarted) {
+            (_player1.value as? Player.Local)?.copy(color = prefs.p1Color)
+                ?: Player.Local(PlayerId.P1, prefs.p1Name, prefs.p1Symbol, prefs.p1Color)
+        } else {
+            Player.Local(PlayerId.P1, prefs.p1Name, prefs.p1Symbol, prefs.p1Color)
+        }
+        
+        // 2. Update Player 2 (Local or AI)
+        _player2.value = if (isVsAI) {
+            if (isGameStarted && existingAi != null) {
+                existingAi.copy(color = prefs.p2Color)
+            } else {
+                Player.Ai(
+                    id = PlayerId.P2,
+                    name = "AI",
+                    symbol = prefs.p2Symbol,
+                    color = prefs.p2Color,
+                    difficulty = _aiDifficulty.value,
+                    strength = prefs.aiStrength,
+                    manualMaxDepth = prefs.manualMaxDepth
+                )
+            }
+        } else {
+            if (isGameStarted) {
+                (_player2.value as? Player.Local)?.copy(color = prefs.p2Color)
+                    ?: Player.Local(PlayerId.P2, prefs.p2Name, prefs.p2Symbol, prefs.p2Color)
+            } else {
+                Player.Local(PlayerId.P2, prefs.p2Name, prefs.p2Symbol, prefs.p2Color)
+            }
+        }
+
+        // 3. Human symbol mapping (only update if not started)
+        if (!isGameStarted) {
+            _humanSymbol.value = if (prefs.firstMoveBehavior == FirstMoveBehavior.PLAYER_O) prefs.p2Symbol else prefs.p1Symbol
+        }
+    }
+
+    private fun determineStartingPlayerId(prefs: UserPreferences): PlayerId {
+        return when (prefs.firstMoveBehavior) {
+            FirstMoveBehavior.PLAYER_X -> PlayerId.P1
+            FirstMoveBehavior.PLAYER_O -> PlayerId.P2
+            else -> if (Math.random() < 0.5) PlayerId.P1 else PlayerId.P2
+        }
+    }
+
+    private fun observeTurnLoop() {
+        viewModelScope.launch {
+            _domainState.map { it.currentPlayerId }.distinctUntilChanged().collectLatest { playerId ->
+                val currentPlayer = if (playerId == PlayerId.P1) _player1.value else _player2.value
+                if (currentPlayer is Player.Ai && _domainState.value.result is MatchResult.Ongoing) {
+                    triggerAiTurn()
                 }
             }
         }
     }
 
     fun setLayer(layer: Int) {
-        if (layer in 0 until boardSize.z) {
+        if (layer in 0 until _domainState.value.boardSize.z) {
             _activeLayer.value = layer
         }
     }
 
-    private fun triggerHaptic(type: String) {
-        if (!hapticEnabled.value) return
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = context.getSystemService(VibratorManager::class.java)
-            vibratorManager?.defaultVibrator ?: return
-        } else {
-            @Suppress("DEPRECATION")
-            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
-        }
-
-        if (vibrator.hasVibrator()) {
-            when (type) {
-                "move" -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        vibrator.vibrate(30)
-                    }
-                }
-                "win" -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 200), -1))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        vibrator.vibrate(longArrayOf(0, 100, 50, 200), -1)
-                    }
-                }
-            }
-        }
-    }
-
     fun onCellClicked(index: Int) {
-        if (_isOpponentThinking.value || _isPaused.value) return
+        if (_isOpponentThinking.value || _isPaused.value || winningLines.isEmpty()) return
         
-        val isHumanP1 = _humanSymbol.value == _p1Symbol.value
-        val humanChar = if (isHumanP1) 'X' else 'O'
+        val playerId = _domainState.value.currentPlayerId
+        val currentPlayer = if (playerId == PlayerId.P1) _player1.value else _player2.value
         
-        if (isVsAI && logic.currentPlayer != humanChar) return
-
-        val current = _state.value
-        if (current.winner != null || current.board[index] != null) return
-
-        if (logic.makeMove(index)) {
-            soundManager.playSound("move")
-            triggerHaptic("move")
-            checkAndHandleResult()
-            saveHistory()
-            
-            if (logic.winner == null && isVsAI && logic.currentPlayer != humanChar) {
-                viewModelScope.launch {
-                    _isOpponentThinking.value = true
-                    delay(500.milliseconds)
-                    aiMove()
-                    _isOpponentThinking.value = false
-                }
-            }
+        if (currentPlayer is Player.Local || currentPlayer == null) {
+             performMove(index)
         }
     }
 
-    private suspend fun aiMove() {
-        val prefs = preferences.userPreferencesFlow.first()
-        val move = withContext(Dispatchers.Default) {
-            logic.getBestMove(
-                aiSymbol = logic.currentPlayer,
-                strength = prefs.aiStrength,
-                isManualDepth = prefs.isAdvancedAiEnabled,
-                manualDepth = prefs.manualMaxDepth
-            )
-        }
-        if (move != null) {
-            logic.makeMove(move)
-            soundManager.playSound("move")
-            triggerHaptic("move")
-            checkAndHandleResult()
-            saveHistory()
+    private fun performMove(index: Int) {
+        val current = _domainState.value
+        val newState = processMoveUseCase(current, index, winningLines)
+        if (newState != current) {
+            applyNewState(newState)
         }
     }
 
-    private fun checkAndHandleResult() {
-        val winnerChar = logic.winner
-        val s = _state.value
-
-        if (winnerChar != null) {
-            when (winnerChar) {
-                'X' -> { soundManager.playSound("win"); triggerHaptic("win") }
-                'O' -> { soundManager.playSound("lose"); triggerHaptic("move") }
-                'D' -> { soundManager.playSound("draw"); triggerHaptic("move") }
-            }
-        }
-
-        _state.value = s.copy(
-            board = mapBoardToSymbols(logic.getBoard()),
-            currentPlayer = mapCharToSymbol(logic.currentPlayer),
-            winner = winnerChar?.let { mapCharToSymbol(it) },
-            winLine = logic.winLine,
-            lastMove = logic.lastMove,
-            xWins = s.xWins + if (winnerChar == 'X') 1 else 0,
-            oWins = s.oWins + if (winnerChar == 'O') 1 else 0,
-            draws = s.draws + if (winnerChar == 'D') 1 else 0
-        )
-    }
-
-    private fun mapCharToSymbol(c: Char): String = if (c == 'X') _p1Symbol.value else if (c == 'O') _p2Symbol.value else c.toString()
-    private fun mapBoardToSymbols(board: List<Char?>): List<String?> = board.map { it?.let { mapCharToSymbol(it) } }
-
-    fun restartGame() {
-        isMatchSaved = false
-        viewModelScope.launch {
-            val nextChar = calculateNextStartingPlayerChar()
-            logic.resetGame(nextChar)
-            
-            _state.value = _state.value.copy(
-                board = List(boardSize.x * boardSize.y * boardSize.z) { null },
-                currentPlayer = mapCharToSymbol(nextChar),
-                winner = null,
-                winLine = null,
-                lastMove = null
-            )
-            _activeLayer.value = 0
-            
-            val isHumanP1 = _humanSymbol.value == _p1Symbol.value
-            val aiChar = if (isHumanP1) 'O' else 'X'
-
-            if (isVsAI && nextChar == aiChar) {
+    private fun triggerAiTurn() {
+        aiTurnJob?.cancel()
+        aiTurnJob = viewModelScope.launch {
+            try {
                 _isOpponentThinking.value = true
                 delay(600.milliseconds)
                 aiMove()
+            } finally {
                 _isOpponentThinking.value = false
             }
         }
     }
 
-    private suspend fun calculateNextStartingPlayerChar(): Char {
-        val currentState = _state.value
-        val nextMovePref = preferences.nextMoveBehaviorFlow.first()
-        val firstMovePref = preferences.firstMoveBehaviorFlow.first()
+    private suspend fun aiMove() {
+        val current = _domainState.value
+        val aiPlayer = (if (current.currentPlayerId == PlayerId.P1) _player1.value else _player2.value) as? Player.Ai ?: return
+        
+        val move = getAiMoveUseCase(
+            board = current.board,
+            aiPlayerId = aiPlayer.id,
+            difficulty = aiPlayer.difficulty,
+            boardSize = current.boardSize,
+            winLines = winningLines,
+            strength = aiPlayer.strength,
+            manualDepth = aiPlayer.manualMaxDepth
+        )
+        
+        move?.let { performMove(it) }
+    }
 
-        val startChar = when (firstMovePref) {
-            FirstMoveBehavior.PLAYER_X -> 'X'
-            FirstMoveBehavior.PLAYER_O -> 'O'
-            FirstMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
+    private fun applyNewState(newState: GameState) {
+        val oldState = _domainState.value
+        updateUiState(newState)
+
+        if (newState.lastMove != oldState.lastMove) {
+            hardwareService.playFeedback(GameFeedback.MOVE, hapticEnabled.value)
         }
 
-        if (currentState.winner == null) return startChar
+        if (newState.result !is MatchResult.Ongoing && newState != oldState) {
+            handleWinEffects(newState)
+            viewModelScope.launch {
+                managePreferencesUseCase.updatePreferences { it.copy(activeMatchId = null) }
+            }
+        }
+        saveHistory()
+    }
 
-        return when (nextMovePref) {
-            NextMoveBehavior.FIXED -> startChar
-            NextMoveBehavior.ALTERNATING -> if (logic.currentPlayer == 'X') 'O' else 'X'
-            NextMoveBehavior.WINNER_STARTS -> {
-                val w = logic.winner
-                if (w == 'X' || w == 'O') w else (if (Math.random() < 0.5) 'X' else 'O')
+    private fun handleWinEffects(state: GameState) {
+        val currentResult = state.result
+        if (currentResult is MatchResult.Draw) {
+            hardwareService.playFeedback(GameFeedback.DRAW, hapticEnabled.value)
+            return
+        }
+        
+        val winnerId = (currentResult as? MatchResult.Winner)?.id ?: return
+        val humanSym = _humanSymbol.value
+        val winnerPlayer = if (winnerId == PlayerId.P1) _player1.value else _player2.value
+        
+        if (winnerPlayer?.symbol == humanSym) {
+            hardwareService.playFeedback(GameFeedback.WIN, hapticEnabled.value)
+        } else {
+            hardwareService.playFeedback(if (isVsAI) GameFeedback.LOSE else GameFeedback.WIN, hapticEnabled.value)
+        }
+    }
+
+    fun restartGame() {
+        aiTurnJob?.cancel()
+        _isOpponentThinking.value = false
+        
+        viewModelScope.launch {
+            val prefs = managePreferencesUseCase.userPreferences.first()
+            val newSize = prefs.boardSize
+            
+            // 1. Sync match-level configuration
+            if (route?.mode == null) {
+                _aiDifficulty.value = prefs.aiDifficulty
+                _gameMode.value = prefs.gameMode
             }
-            NextMoveBehavior.LOSER_STARTS -> {
-                val w = logic.winner
-                if (w == 'X') 'O' else if (w == 'O') 'X' else (if (Math.random() < 0.5) 'X' else 'O')
+            
+            // 2. Recompute lines if board size changed
+            if (newSize != _domainState.value.boardSize) {
+                winningLines = computeWinningLinesUseCase(newSize)
             }
-            NextMoveBehavior.RANDOM -> if (Math.random() < 0.5) 'X' else 'O'
+            
+            // 3. Reset domain state with new size and starting player
+            val nextId = determineStartingPlayerId(prefs)
+            val newMatchId = java.util.UUID.randomUUID().toString()
+            updateUiState(GameState(
+                matchId = newMatchId,
+                boardSize = newSize,
+                board = List(newSize.x * newSize.y * newSize.z) { null },
+                currentPlayerId = nextId,
+                p1Wins = _domainState.value.p1Wins,
+                p2Wins = _domainState.value.p2Wins,
+                draws = _domainState.value.draws
+            ))
+            managePreferencesUseCase.updatePreferences { it.copy(activeMatchId = newMatchId) }
+            
+            // 4. Force player re-initialization (now that board is empty)
+            initializePlayers(prefs)
+            
+            _activeLayer.value = 0
+            _isPaused.value = false
         }
     }
 
@@ -333,71 +398,71 @@ class GameViewModel @Inject constructor(
 
     fun saveHistory() {
         viewModelScope.launch {
-            preferences.addGameHistory(
+            val p1 = _player1.value ?: return@launch
+            val p2 = _player2.value ?: return@launch
+            
+            val (strength, depth) = if (p2 is Player.Ai) {
+                p2.strength to p2.manualMaxDepth
+            } else {
+                val prefs = managePreferencesUseCase.userPreferences.first()
+                prefs.aiStrength to prefs.manualMaxDepth
+            }
+
+            manageHistoryUseCase.saveGame(
                 GameHistory(
-                    matchId = _state.value.matchId,
+                    matchId = _domainState.value.matchId,
                     dateMillis = Date().time,
                     difficulty = _aiDifficulty.value,
                     gameMode = _gameMode.value,
-                    state = _state.value,
+                    state = MatchMapper.mapToEntity(_domainState.value),
                     humanSymbol = _humanSymbol.value,
-                    p1Symbol = _p1Symbol.value,
-                    p2Symbol = _p2Symbol.value,
-                    p1Name = _p1Name.value,
-                    p2Name = _p2Name.value,
-                    p1Color = _p1Color.value,
-                    p2Color = _p2Color.value
+                    p1Symbol = p1.symbol,
+                    p2Symbol = p2.symbol,
+                    p1Name = p1.name,
+                    p2Name = p2.name,
+                    p1Color = p1.color,
+                    p2Color = p2.color,
+                    aiStrength = strength,
+                    manualMaxDepth = depth
                 )
             )
         }
     }
 
-    private fun updateState() {
-        val s = _state.value
-        _state.value = s.copy(
-            board = mapBoardToSymbols(logic.getBoard()),
-            currentPlayer = mapCharToSymbol(logic.currentPlayer),
-            winner = logic.winner?.let { mapCharToSymbol(it) },
-            winLine = logic.winLine,
-            lastMove = logic.lastMove
-        )
-    }
-
     fun loadFromHistory(history: GameHistory) {
-        _p1Symbol.value = history.p1Symbol
-        _p2Symbol.value = history.p2Symbol
-        _p1Name.value = history.p1Name
-        _p2Name.value = history.p2Name
-        _p1Color.value = history.p1Color
-        _p2Color.value = history.p2Color
-        _humanSymbol.value = history.humanSymbol
+        aiTurnJob?.cancel()
+        _isOpponentThinking.value = false
 
-        _state.value = history.state.copy(matchId = history.matchId)
+        _player1.value = Player.Local(PlayerId.P1, history.p1Name, history.p1Symbol, history.p1Color)
+        _player2.value = if (history.gameMode == GameMode.VS_AI) {
+            Player.Ai(
+                id = PlayerId.P2,
+                name = history.p2Name,
+                symbol = history.p2Symbol,
+                color = history.p2Color,
+                difficulty = history.difficulty,
+                strength = history.aiStrength,
+                manualMaxDepth = history.manualMaxDepth
+            )
+        } else {
+            Player.Local(PlayerId.P2, history.p2Name, history.p2Symbol, history.p2Color)
+        }
+        
+        _humanSymbol.value = history.humanSymbol
         _gameMode.value = history.gameMode
         _aiDifficulty.value = history.difficulty
-        logic.aiDifficulty = history.difficulty
+
+        val restoredDomain = MatchMapper.mapToDomain(history.state, history.matchId)
+        updateUiState(restoredDomain)
         
-        // Map symbols back to chars for logic
-        val logicBoard = history.state.board.map { 
-            if (it == history.p1Symbol) 'X' else if (it == history.p2Symbol) 'O' else null 
+        viewModelScope.launch {
+            winningLines = computeWinningLinesUseCase(restoredDomain.boardSize)
         }
-        val logicCurrent = if (history.state.currentPlayer == history.p1Symbol) 'X' else 'O'
-        
-        logic.setBoard(logicBoard, logicCurrent, history.state.boardSize)
         _activeLayer.value = 0
-        
-        if (isVsAI && logic.currentPlayer != (if (history.humanSymbol == history.p1Symbol) 'X' else 'O') && logic.winner == null) {
-            viewModelScope.launch {
-                _isOpponentThinking.value = true
-                delay(600.milliseconds)
-                aiMove()
-                _isOpponentThinking.value = false
-            }
-        }
     }
 
     override fun onCleared() {
-        if (_state.value.winner == null && _state.value.board.any { it != null }) {
+        if (_domainState.value.result is MatchResult.Ongoing && _domainState.value.board.any { it != null }) {
              saveHistory()
         }
     }

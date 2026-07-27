@@ -1,114 +1,104 @@
-# 🎮 Tic Tac Toe --- Jetpack Compose Edition
+# 🎮 Tic Tac Toe --- 3D Multi-Layer Edition
 
-A modern **Tic Tac Toe** game built with **Jetpack Compose**, featuring
-multiple AI difficulty levels, immersive sound and animation, and a
-sleek **Material 3** design.
+[![Platform](https://img.shields.io/badge/Platform-Android-brightgreen.svg)](https://developer.android.com/android)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.x-blue.svg)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack-Compose-4285F4.svg)](https://developer.android.com/jetpack/compose)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-------------------------------------------------------------------------
+A high-performance, multi-dimensional **Tic Tac Toe** game built from the ground up with **Jetpack Compose**. This edition introduces a revolutionary **Pseudo-3D engine**, advanced **Monte Carlo simulations**, and a robust **Clean Architecture** to provide a professional-grade gaming experience.
 
-## ✨ Features
+---
 
--   🧠 **Four Game Modes**
-  -   👥 Player vs Player (PVP)
-  -   🎯 Easy AI --- Random move selection
-  -   🧩 Medium AI --- Defensive + Winning logic
-  -   🧠 Hard AI --- Minimax algorithm with Alpha-Beta pruning
-      (Unbeatable)
--   💾 **Game History**
-  -   Stores each finished match with date, mode, and board state.
-  -   Allows reopening any past match and continuing from that point.
--   🎨 **Jetpack Compose UI**
-  -   100% built with **Jetpack Compose** and **Material 3**.
-  -   Reactive state handling using `ViewModel` and `StateFlow`.
-  -   Responsive layout optimized for both **portrait** and
-      **landscape** via `BoxWithConstraints`.
--   ⚙️ **Persistence**
-  -   Game state and theme preferences saved using **DataStore**.
-  -   Automatically restores game progress and theme settings after
-      app restart.
+## 🚀 Key Features
 
-------------------------------------------------------------------------
+### 🧱 Pseudo-3D & Multi-Layer Boards
+- **Beyond 2D:** Play on grids spanning multiple layers (e.g., 3x3x3, 5x5x2).
+- **Dynamic Dimensions:** Fully customizable rows, columns, and layers through the "Quick Setup" menu.
+- **Winning Streak Control:** Adjust the required streak (3, 4, or 5) to win, scaling with board complexity.
 
-## 🔊 Animations & Sound Effects
+### 🧠 Advanced AI & Match Analysis
+- **Impossible Mode:** An unbeatable AI utilizing **Minimax with Alpha-Beta pruning**.
+- **Humanized Difficulty:** AI strength slider (1-100) that injects probabilistic errors, simulating different skill levels.
+- **Monte Carlo fairness Check:** Before starting, the app can run a 1,000-iteration random simulation to calculate win probabilities and verify if a custom board configuration is fair for both players.
 
--   🎵 **Sound Effects:**
-  -   Added unique **move**, **win**, **lose**, and **draw** sounds.
-  -   Added background music (**BGM**).
-  -   All sound features can be toggled in the **Settings** screen.
--   🎬 **Animations:**
-  -   Smooth animations for board updates and transitions.
-  -   Visual feedback for game results and state changes.
-  -   Optimized for both light and dark themes.
+### 🌍 Global & Tactical UX
+- **Hindi Localization:** Full support for Hindi (`values-hi`) with a seamless in-app language switcher.
+- **Haptic Feedback:** Distinct vibration patterns for moves, victories, and draws powered by a dedicated hardware service.
+- **Cyber-Grid Aesthetics:** A custom particle-based confetti system and interactive "snake" chain backgrounds.
 
-------------------------------------------------------------------------
+---
 
-## 🧩 Tech Stack
+## 🏗️ Clean Architecture
 
-Layer             Technology
-  ----------------- ------------------------------------
-🎨 UI             Jetpack Compose, Material 3
-🧠 Architecture   MVVM (ViewModel + StateFlow)
-🧩 Logic          Pure Kotlin (Minimax + Alpha-Beta)
-💾 Storage        DataStore + Kotlin Serialization
-⚙️ Language       Kotlin
+The project follows the **SOLID** principles and **Clean Architecture** to ensure maintainability and testability.
 
-------------------------------------------------------------------------
+```text
+com.tuto.alokkumar.tictactoe
+├── core/             # Hardware services, Preferences, Utility classes
+├── data/             # Models, Repositories (Impl), DataStore persistence
+├── domain/           # UseCases, Business Models, Logic (The "Truth")
+│   ├── model/        # Domain-specific data classes
+│   └── usecase/      # CalculateMatchProbabilities, ProcessMove, GetAiMove
+├── di/               # Hilt Modules (Dependency Injection)
+├── viewModel/        # Screen-specific State management
+└── ui/               # UI Layer (Composables, Themes, Screens)
+```
 
-## 🧠 AI Logic Overview
+- **Unidirectional Data Flow:** State flows down, events flow up.
+- **Type-safe Navigation:** Uses Kotlin Serialization for robust screen transitions.
 
-The **Hard** mode uses the **Minimax algorithm** enhanced with
-**Alpha-Beta pruning**, making it nearly **impossible to defeat**.\
-It evaluates all possible moves recursively to pick the best outcome
-based on perfect play.
+---
 
-Mode     Description
-  -------- --------------------------------------------
-Easy     Plays random moves
-Medium   Tries to win and blocks player threats
-Hard     Plays optimally using Minimax + Alpha-Beta
+## 🔬 Technical Deep Dive
 
-------------------------------------------------------------------------
+### AI Logic: Minimax + Alpha-Beta
+The AI evaluates millions of possible game states. To optimize performance on mobile, we implement:
+- **Transposition Tables:** Caching previously evaluated board states.
+- **Board Symmetry Reduction:** Identifying rotations and flips to prune the search tree.
 
-## 🚀 How to Edit
+### Monte Carlo Simulation
+The "Match Analysis" feature uses a random-play algorithm to simulate thousands of games in milliseconds. This provides users with a statistical "Fairness Score" for their custom board setups.
 
-1.  Clone the repository:
+---
 
-    ``` bash
-    git clone https://github.com/dev-Alok-Kumar-android/Tic-Tac-Toe-Android.git
-    ```
+## 🗺️ Roadmap
 
-2.  Switch to the Compose branch:
+- [ ] **v3.1.0:** 🛜 Local Multiplayer via Bluetooth.
+- [ ] **v3.2.0:** 🔥 Global Multiplayer via Firebase/Realtime Database.
+- [ ] **v3.5.0:** 📱 Tablet & Foldable UI optimization (Two-pane layout).
+- [ ] **v4.0.0:** 🎨 Custom 3D Asset support and skin marketplace.
 
-    ``` bash
-    git checkout compose-version
-    ```
+---
 
-3.  Open in **Android Studio Hedgehog+** (or newer).
+## 🛠️ Installation & Setup
 
-4. Add Some Important Default Files.
-(or make a new project (Empty Activity) in Android Studio(can add same package and same name) then replace the src/main then add dependencies )
+1. **Prerequisites:** Android Studio Ladybug (2024.2.1) or newer.
+2. **Clone:**
+   ```bash
+   git clone https://github.com/dev-Alok-Kumar-android/Tic-Tac-Toe-Android.git
+   ```
+3. **Branch:**
+   ```bash
+   git checkout feature-pseudo-3d
+   ```
+4. **Build:** Sync Gradle and hit **Run ▶️**.
 
-5. Click **Run ▶️** if done.
-
-------------------------------------------------------------------------
+---
 
 ## 🏷️ Version History
 
-  -----------------------------------------------------------------------
-Version                             Changes
-  ----------------------------------- -----------------------------------
-v1.0                                Classic XML-based version
+| Version | Milestone | Key Changes |
+| :--- | :--- | :--- |
+| **v3.0.0-alpha2** | **3D & Architecture** | UseCases, Hilt, Monte Carlo, Pseudo-3D UI. |
+| **v2.3.0** | **Unified Logic** | Merged 2D/3D systems, Orientation support. |
+| **v2.1.0** | **Compose Shift** | Migrated from XML to Jetpack Compose. |
+| **v1.0.0** | **Legacy** | Initial XML implementation. |
 
-v2.0                                Jetpack Compose rewrite with AI
-logic, persistence, and sounds
-  -----------------------------------------------------------------------
+---
 
-------------------------------------------------------------------------
+## 📄 License & Credits
 
-## 📄 License
+Distributed under the **MIT License**. Created by [Alok Kumar](https://github.com/dev-Alok-Kumar-android).
 
-This project is licensed under the **MIT License**.
-
-------------------------------------------------------------------------
-
-💡 *Built with Kotlin and Jetpack Compose.*
+---
+💡 *Pushing the boundaries of classic games with modern technology.*

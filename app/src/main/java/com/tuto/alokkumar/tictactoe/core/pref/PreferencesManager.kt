@@ -1,8 +1,6 @@
 package com.tuto.alokkumar.tictactoe.core.pref
 
 import android.content.Context
-import android.os.Build
-import android.widget.Toast
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -15,17 +13,16 @@ import com.tuto.alokkumar.tictactoe.data.BoardStyle
 import com.tuto.alokkumar.tictactoe.data.FirstMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.GameHistory
 import com.tuto.alokkumar.tictactoe.data.GameMode
-import com.tuto.alokkumar.tictactoe.data.GameState
+import com.tuto.alokkumar.tictactoe.data.GameStateEntity
 import com.tuto.alokkumar.tictactoe.data.NextMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.Orientation
 import com.tuto.alokkumar.tictactoe.data.UserPreferences
-import kotlinx.coroutines.Dispatchers
+import com.tuto.alokkumar.tictactoe.domain.model.PlayerId
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
@@ -82,7 +79,7 @@ class PreferencesManager(private val appContext: Context) {
                 boardStyle = safeEnum { BoardStyle.valueOf(prefs[KEY_BOARD_STYLE]?.uppercase() ?: "") } ?: BoardStyle.LAYERED_3D,
                 orientation = safeEnum { Orientation.valueOf(prefs[KEY_ORIENTATION]?.uppercase() ?: "") } ?: Orientation.SYSTEM,
                 p1Name = "Player 1",
-                p2Name = "Player 2"
+                p2Name = "Player 2",
             )
         }
     }
@@ -97,9 +94,13 @@ class PreferencesManager(private val appContext: Context) {
                 } ?: AiDifficulty.HARD,
                 gameMode = safeEnum { 
                     val raw = jsonElement["gameMode"]?.jsonPrimitive?.content ?: jsonElement["matchType"]?.jsonPrimitive?.content
-                    if (raw?.uppercase() == "PVP") GameMode.PVP
-                    else if (raw?.uppercase() in listOf("EASY", "MEDIUM", "HARD", "IMPOSSIBLE")) GameMode.VS_AI 
-                    else GameMode.valueOf(raw?.uppercase() ?: "VS_AI")
+                    if (raw?.uppercase() == "PVP") {
+                        GameMode.PVP
+                    } else if (raw?.uppercase() in listOf("EASY", "MEDIUM", "HARD", "IMPOSSIBLE")) {
+                        GameMode.VS_AI
+                    } else {
+                        GameMode.valueOf(raw?.uppercase() ?: "VS_AI")
+                    }
                 } ?: GameMode.VS_AI,
                 boardSize = try { jsonElement["boardSize"]?.let { Json.decodeFromJsonElement<BoardSize>(it) } ?: BoardSize() } catch (_: Exception) { BoardSize() },
                 theme = safeEnum { AppTheme.valueOf(jsonElement["theme"]?.jsonPrimitive?.content?.uppercase() ?: "SYSTEM") } ?: AppTheme.SYSTEM,
@@ -114,7 +115,6 @@ class PreferencesManager(private val appContext: Context) {
                 firstMoveBehavior = safeEnum { FirstMoveBehavior.valueOf(jsonElement["firstMoveBehavior"]?.jsonPrimitive?.content?.uppercase() ?: "PLAYER_X") } ?: FirstMoveBehavior.PLAYER_X,
                 nextMoveBehavior = safeEnum { NextMoveBehavior.valueOf(jsonElement["nextMoveBehavior"]?.jsonPrimitive?.content?.uppercase() ?: "ALTERNATING") } ?: NextMoveBehavior.ALTERNATING,
                 aiStrength = jsonElement["aiStrength"]?.jsonPrimitive?.intOrNull ?: 75,
-                isAdvancedAiEnabled = jsonElement["isAdvancedAiEnabled"]?.jsonPrimitive?.booleanOrNull ?: false,
                 manualMaxDepth = jsonElement["manualMaxDepth"]?.jsonPrimitive?.intOrNull ?: 6,
                 hapticEnabled = jsonElement["hapticEnabled"]?.jsonPrimitive?.booleanOrNull ?: true,
                 p1Symbol = jsonElement["p1Symbol"]?.jsonPrimitive?.content ?: "X",
@@ -122,7 +122,8 @@ class PreferencesManager(private val appContext: Context) {
                 p1Name = jsonElement["p1Name"]?.jsonPrimitive?.content ?: "Player 1",
                 p2Name = jsonElement["p2Name"]?.jsonPrimitive?.content ?: "Player 2",
                 p1Color = jsonElement["p1Color"]?.jsonPrimitive?.longOrNull ?: 0xFFE91E63,
-                p2Color = jsonElement["p2Color"]?.jsonPrimitive?.longOrNull ?: 0xFF2196F3
+                p2Color = jsonElement["p2Color"]?.jsonPrimitive?.longOrNull ?: 0xFF2196F3,
+                activeMatchId = jsonElement["activeMatchId"]?.jsonPrimitive?.contentOrNull
             )
         } catch (_: Exception) { UserPreferences() }
     }
@@ -130,25 +131,6 @@ class PreferencesManager(private val appContext: Context) {
     private inline fun <reified T : Enum<T>> safeEnum(block: () -> T): T? {
         return try { block() } catch (_: Exception) { null }
     }
-
-    // --- DERIVED FLOWS ---
-    val aiDifficultyFlow = userPreferencesFlow.map { it.aiDifficulty }
-    val boardSizeFlow = userPreferencesFlow.map { it.boardSize }
-    val themeFlow = userPreferencesFlow.map { it.theme }
-    val immersiveFlow = userPreferencesFlow.map { it.immersiveMode }
-    val dynamicColorFlow = userPreferencesFlow.map { it.dynamicColor }
-    val bgmEnabledFlow = userPreferencesFlow.map { it.bgmEnabled }
-    val soundEnabledFlow = userPreferencesFlow.map { it.soundEnabled }
-    val bgAnimationEnabledFlow = userPreferencesFlow.map { it.bgAnimationEnabled }
-    val boardStyleFlow = userPreferencesFlow.map { it.boardStyle }
-    val orientationFlow = userPreferencesFlow.map { it.orientation }
-    val firstMoveBehaviorFlow = userPreferencesFlow.map { it.firstMoveBehavior }
-    val nextMoveBehaviorFlow = userPreferencesFlow.map { it.nextMoveBehavior }
-    val aiStrengthFlow = userPreferencesFlow.map { it.aiStrength }
-    val isAdvancedAiEnabledFlow = userPreferencesFlow.map { it.isAdvancedAiEnabled }
-    val manualMaxDepthFlow = userPreferencesFlow.map { it.manualMaxDepth }
-    val hapticEnabledFlow = userPreferencesFlow.map { it.hapticEnabled }
-    val gameModeFlow = userPreferencesFlow.map { it.gameMode }
 
     // --- UNIFIED SETTER ---
     suspend fun updatePrefs(transform: (UserPreferences) -> UserPreferences) {
@@ -187,44 +169,6 @@ class PreferencesManager(private val appContext: Context) {
         }
     }
 
-    // --- SETTERS ---
-    suspend fun setAiDifficulty(difficulty: AiDifficulty) = updatePrefs { it.copy(aiDifficulty = difficulty) }
-    suspend fun setGameMode(mode: GameMode) = updatePrefs { it.copy(gameMode = mode) }
-    suspend fun setBoardSize(size: BoardSize) = updatePrefs { it.copy(boardSize = size) }
-    suspend fun setOrientation(orientation: Orientation) = updatePrefs { it.copy(orientation = orientation) }
-    suspend fun setTheme(theme: AppTheme) = updatePrefs { it.copy(theme = theme) }
-    suspend fun setBoardStyle(style: BoardStyle) = updatePrefs { it.copy(boardStyle = style) }
-    suspend fun setFirstMoveBehavior(behavior: FirstMoveBehavior) = updatePrefs { it.copy(firstMoveBehavior = behavior) }
-    suspend fun setNextMoveBehavior(behavior: NextMoveBehavior) = updatePrefs { it.copy(nextMoveBehavior = behavior) }
-
-    suspend fun toggleImmersiveMode() {
-        val current = immersiveFlow.first()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            updatePrefs { it.copy(immersiveMode = !current) }
-        } else {
-            updatePrefs { it.copy(immersiveMode = false) }
-            withContext(Dispatchers.Main) {
-                Toast.makeText(appContext, "Fullscreen not supported", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    suspend fun toggleDynamicColor() {
-        val current = dynamicColorFlow.first()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            updatePrefs { it.copy(dynamicColor = !current) }
-        } else {
-            updatePrefs { it.copy(dynamicColor = false) }
-            withContext(Dispatchers.Main) {
-                Toast.makeText(appContext, "DynamicColor not supported", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    suspend fun toggleBgm() = updatePrefs { it.copy(bgmEnabled = !it.bgmEnabled) }
-    suspend fun toggleSound() = updatePrefs { it.copy(soundEnabled = !it.soundEnabled) }
-    suspend fun toggleBgAnimation() = updatePrefs { it.copy(bgAnimationEnabled = !it.bgAnimationEnabled) }
-
 
     // --- GAME HISTORY ---
     suspend fun addGameHistory(history: GameHistory) {
@@ -255,31 +199,50 @@ class PreferencesManager(private val appContext: Context) {
                 val obj = element.jsonObject
                 
                 val rawMode = obj["mode"]?.jsonPrimitive?.content?.uppercase()
-                val rawDifficulty = obj["difficulty"]?.jsonPrimitive?.content?.uppercase() ?: rawMode
                 
-                val matchType = if (rawMode == "PVP" || obj["matchType"]?.jsonPrimitive?.content == "PVP" || obj["gameMode"]?.jsonPrimitive?.content == "PVP") {
+                val matchType = if ((rawMode == "PVP") || (obj["matchType"]?.jsonPrimitive?.content == "PVP") || (obj["gameMode"]?.jsonPrimitive?.content == "PVP")) {
                     GameMode.PVP
                 } else {
                     GameMode.VS_AI
                 }
                 
+                val rawDifficulty = obj["difficulty"]?.jsonPrimitive?.content?.uppercase() ?: rawMode
                 val finalDifficulty = safeEnum { 
                     if (rawDifficulty == "PVP") AiDifficulty.HARD else AiDifficulty.valueOf(rawDifficulty ?: "HARD")
                 } ?: AiDifficulty.HARD
                 
+                val recordBoardSize = try { 
+                    obj["boardSize"]?.let { Json.decodeFromJsonElement<BoardSize>(it) } ?: BoardSize() 
+                } catch (_: Exception) { BoardSize() }
+
+                val fallbackState = GameStateEntity(
+                    board = List(recordBoardSize.x * recordBoardSize.y * recordBoardSize.z) { null },
+                    currentPlayerId = PlayerId.P1.name,
+                    winnerId = null,
+                    isDraw = false,
+                    winLine = null,
+                    lastMove = null,
+                    p1Wins = 0,
+                    p2Wins = 0,
+                    draws = 0,
+                    boardSize = recordBoardSize
+                )
+
                 GameHistory(
                     matchId = obj["matchId"]?.jsonPrimitive?.content ?: obj["dateMillis"]?.jsonPrimitive?.content ?: System.currentTimeMillis().toString(),
                     dateMillis = obj["dateMillis"]?.jsonPrimitive?.longOrNull ?: System.currentTimeMillis(),
                     difficulty = finalDifficulty,
                     gameMode = matchType,
-                    state = try { obj["state"]?.let { Json.decodeFromJsonElement<GameState>(it) } ?: GameState() } catch (_: Exception) { GameState() },
+                    state = try { obj["state"]?.let { Json.decodeFromJsonElement<GameStateEntity>(it) } ?: fallbackState } catch (_: Exception) { fallbackState },
                     humanSymbol = obj["humanSymbol"]?.jsonPrimitive?.content ?: "X",
                     p1Symbol = obj["p1Symbol"]?.jsonPrimitive?.content ?: "X",
                     p2Symbol = obj["p2Symbol"]?.jsonPrimitive?.content ?: "O",
                     p1Name = obj["p1Name"]?.jsonPrimitive?.content ?: "Player 1",
                     p2Name = obj["p2Name"]?.jsonPrimitive?.content ?: "Player 2",
                     p1Color = obj["p1Color"]?.jsonPrimitive?.longOrNull ?: 0xFFE91E63,
-                    p2Color = obj["p2Color"]?.jsonPrimitive?.longOrNull ?: 0xFF2196F3
+                    p2Color = obj["p2Color"]?.jsonPrimitive?.longOrNull ?: 0xFF2196F3,
+                    aiStrength = obj["aiStrength"]?.jsonPrimitive?.intOrNull ?: 75,
+                    manualMaxDepth = obj["manualMaxDepth"]?.jsonPrimitive?.intOrNull ?: 6
                 )
             }
         } catch (_: Exception) {
@@ -296,10 +259,6 @@ class PreferencesManager(private val appContext: Context) {
                 prefs[KEY_HISTORY] = Json.encodeToString(list)
             }
         }
-    }
-
-    suspend fun removeGameHistory(history: GameHistory) {
-        removeGameHistories(listOf(history.matchId))
     }
 
     suspend fun clearAllGameHistory() {

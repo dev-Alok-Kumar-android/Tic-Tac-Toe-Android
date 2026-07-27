@@ -9,9 +9,6 @@ import kotlin.math.pow
  */
 object AiMove {
 
-    private val transpositionTable = mutableMapOf<String, Int>()
-    private const val MAX_TABLE_SIZE = 10000
-
     /**
      * Calculates the best move for any board configuration and difficulty.
      */
@@ -22,14 +19,12 @@ object AiMove {
         boardSize: BoardSize,
         winLines: List<List<Int>>,
         strength: Int = 100,
-        isManualDepth: Boolean = false,
         manualDepth: Int = 6
     ): Int? {
-        transpositionTable.clear()
         val moves = board.indices.filter { board[it] == null }
         if (moves.isEmpty()) return null
 
-        // 1. Skill Level Randomness: Lower strength increases chance of a non-optimal random move.
+        // 1. Skill Level Randomness
         val errorChance = (100 - strength) * 0.9 / 100.0
         if (Math.random() < errorChance && difficulty != AiDifficulty.IMPOSSIBLE) {
             return moves.random()
@@ -40,19 +35,20 @@ object AiMove {
             AiDifficulty.MEDIUM -> mediumMove(board, ai, winLines)
             AiDifficulty.HARD, AiDifficulty.IMPOSSIBLE -> {
                 val totalCells = boardSize.x * boardSize.y * boardSize.z
-                val maxDepth = if (isManualDepth) {
-                    manualDepth 
-                } else if (difficulty == AiDifficulty.IMPOSSIBLE && totalCells <= 9) {
-                    9 
-                } else {
-                    when {
-                        totalCells <= 9 -> 9
-                        totalCells <= 16 -> 6
-                        totalCells <= 25 -> 4
-                        else -> 3
-                    }
+                
+                // Safety Cap: Even if user picks depth 12, large boards will crash.
+                // We cap it based on total cells to keep the UI responsive.
+                val safetyCap = when {
+                    totalCells <= 16 -> 12
+                    totalCells <= 25 -> 6
+                    totalCells <= 64 -> 4
+                    totalCells <= 100 -> 2
+                    else -> 1
                 }
-                optimizedMinimaxMove(board.toMutableList(), ai, winLines, boardSize, maxDepth)
+                
+                val finalDepth = manualDepth.coerceAtMost(safetyCap)
+                
+                optimizedMinimaxMove(board.toMutableList(), ai, winLines, boardSize, finalDepth)
             }
         }
     }
@@ -82,7 +78,7 @@ object AiMove {
             evaluatedSymmetries.add(canonical)
 
             val score = minimax(
-                depth = 0,
+                depth = 1,
                 isMax = false,
                 ai = ai,
                 alpha = Int.MIN_VALUE,
@@ -118,10 +114,6 @@ object AiMove {
     ): Int {
         val player = if (ai == 'X') 'O' else 'X'
         
-        val canonical = BoardSymmetry.getCanonicalForm(board, boardSize)
-        val cacheKey = "$canonical:$isMax:$depth"
-        transpositionTable[cacheKey]?.let { return it }
-
         val winner = getWinnerForMinimax(winLines, board)
         if (winner == ai) return 100 - depth
         if (winner == player) return depth - 100
@@ -146,7 +138,6 @@ object AiMove {
                     if (b <= a) break
                 }
             }
-            putInCache(cacheKey, best)
             return best
         } else {
             var best = Int.MAX_VALUE
@@ -160,16 +151,8 @@ object AiMove {
                     if (b <= a) break
                 }
             }
-            putInCache(cacheKey, best)
             return best
         }
-    }
-
-    private fun putInCache(key: String, value: Int) {
-        if (transpositionTable.size >= MAX_TABLE_SIZE) {
-            transpositionTable.clear()
-        }
-        transpositionTable[key] = value
     }
 
     private fun evaluateHeuristic(board: List<Char?>, ai: Char, winLines: List<List<Int>>): Int {

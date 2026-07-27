@@ -1,5 +1,8 @@
 package com.tuto.alokkumar.tictactoe.data
 
+import android.os.Parcelable
+import androidx.annotation.Keep
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
 /**
@@ -19,11 +22,11 @@ import kotlinx.serialization.Serializable
  * @property firstMoveBehavior Who starts the very first game of a session.
  * @property nextMoveBehavior Logic for who starts subsequent games in a session.
  * @property aiStrength Granular AI skill level (1-100).
- * @property isAdvancedAiEnabled If true, allows manual search depth override.
  * @property manualMaxDepth User-defined maximum Minimax search depth.
  * @property hapticEnabled True if tactile vibration feedback is active.
- * @property gameMode High-level match category (PvP vs vs AI).
+ * @property gameMode High-level match category (PvP vs AI).
  */
+@Keep
 @Serializable
 data class UserPreferences(
     val aiDifficulty: AiDifficulty = AiDifficulty.HARD,
@@ -40,7 +43,6 @@ data class UserPreferences(
     val firstMoveBehavior: FirstMoveBehavior = FirstMoveBehavior.PLAYER_X,
     val nextMoveBehavior: NextMoveBehavior = NextMoveBehavior.ALTERNATING,
     val aiStrength: Int = 75,
-    val isAdvancedAiEnabled: Boolean = false,
     val manualMaxDepth: Int = 6,
     val hapticEnabled: Boolean = true,
     val gameMode: GameMode = GameMode.VS_AI,
@@ -48,53 +50,26 @@ data class UserPreferences(
     val p2Symbol: String = "O",
     val p1Name: String = "Player 1",
     val p2Name: String = "Player 2",
-    val p1Color: Long = 0xFFE91E63, // Default Secondary
-    val p2Color: Long = 0xFF2196F3  // Default Tertiary
+    val p1Color: Long = 0xFFE91E63,
+    val p2Color: Long = 0xFF2196F3,
+    val activeMatchId: String? = null
 )
 
-/**
- * High-level match categories.
- */
+@Keep
 @Serializable
-enum class GameMode {
-    /** Local human vs human. */
-    PVP,
-    /** Local human vs automated engine. */
-    VS_AI
-}
+enum class GameMode { PVP, VS_AI }
 
-/**
- * Game session modes defining AI difficulty levels.
- */
+@Keep
 @Serializable
-enum class AiDifficulty {
-    EASY,
-    MEDIUM,
-    HARD,
-    IMPOSSIBLE
-}
+enum class AiDifficulty { EASY, MEDIUM, HARD, IMPOSSIBLE }
 
-/**
- * Behavior for the very first move of a game session.
- */
+@Keep
 @Serializable
-enum class FirstMoveBehavior {
-    PLAYER_X,
-    PLAYER_O,
-    RANDOM
-}
+enum class FirstMoveBehavior { PLAYER_X, PLAYER_O, RANDOM }
 
-/**
- * Behavior for starting subsequent games in a session.
- */
+@Keep
 @Serializable
-enum class NextMoveBehavior {
-    FIXED,
-    ALTERNATING,
-    WINNER_STARTS,
-    LOSER_STARTS,
-    RANDOM
-}
+enum class NextMoveBehavior { FIXED, ALTERNATING, WINNER_STARTS, LOSER_STARTS, RANDOM }
 
 /**
  * Defines the dimensions of a 2D or 3D Tic Tac Toe board.
@@ -104,26 +79,28 @@ enum class NextMoveBehavior {
  * @property z Number of layers (depth dimension for 3D play).
  * @property winCondition The contiguous streak length of identical tokens required to win.
  */
+@Keep
 @Serializable
+@Parcelize
 data class BoardSize(
     val x: Int = 3,
     val y: Int = 3,
     val z: Int = 1,
     val winCondition: Int = 3
-)
+) : Parcelable
 
-/** Application visual layout theme modes. */
+@Keep
 @Serializable
 enum class AppTheme { LIGHT, DARK, SYSTEM }
 
-/** Application supported localization languages. */
+@Keep
 @Serializable
 enum class AppLanguage { ENGLISH, HINDI }
 
-/** Aesthetic render style of the grid. */
+@Keep
 @Serializable
 enum class BoardStyle { CLASSIC, LAYERED_3D }
 
-/** Device orientation lock modes. */
+@Keep
 @Serializable
 enum class Orientation { PORTRAIT, LANDSCAPE, AUTO, SYSTEM }

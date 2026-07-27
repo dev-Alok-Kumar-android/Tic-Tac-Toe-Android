@@ -390,7 +390,7 @@ fun AdvancedFiltersContent(
 @Composable
 fun HistoryItem(item: GameHistory, isSelected: Boolean, modifier: Modifier = Modifier) {
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }
-    val isOngoing = item.state.winner == null
+    val isOngoing = item.state.winnerId == null && !item.state.isDraw
 
     Column(modifier.padding(16.dp)) {
         Row(
@@ -452,12 +452,12 @@ fun HistoryItem(item: GameHistory, isSelected: Boolean, modifier: Modifier = Mod
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
-                    text = "${item.p1Name} (${item.p1Symbol}): ${item.state.xWins}",
+                    text = stringResource(R.string.player_stats_template, item.p1Name, item.p1Symbol, item.state.p1Wins),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(item.p1Color)
                 )
                 Text(
-                    text = "${item.p2Name} (${item.p2Symbol}): ${item.state.oWins}",
+                    text = stringResource(R.string.player_stats_template, item.p2Name, item.p2Symbol, item.state.p2Wins),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(item.p2Color)
                 )

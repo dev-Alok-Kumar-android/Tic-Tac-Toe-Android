@@ -1,6 +1,5 @@
 package com.tuto.alokkumar.tictactoe.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,9 +27,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -53,6 +56,7 @@ import com.tuto.alokkumar.tictactoe.data.NextMoveBehavior
 import com.tuto.alokkumar.tictactoe.data.Orientation
 import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 import com.tuto.alokkumar.tictactoe.ui.components.NumberPicker
+import com.tuto.alokkumar.tictactoe.ui.components.ProbabilityAnalysisCard
 import com.tuto.alokkumar.tictactoe.ui.components.SettingSelector
 import com.tuto.alokkumar.tictactoe.ui.components.SwitchSetting
 import com.tuto.alokkumar.tictactoe.viewModel.SettingsViewModel
@@ -65,7 +69,7 @@ import java.util.Calendar
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     val aiDifficulty by viewModel.selectedAiDifficulty.collectAsStateWithLifecycle()
     val isImmersiveMode by viewModel.immersiveMode.collectAsStateWithLifecycle()
@@ -82,9 +86,10 @@ fun SettingsScreen(
     val nextMoveBehavior by viewModel.nextMoveBehavior.collectAsStateWithLifecycle()
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     val aiStrength by viewModel.aiStrength.collectAsStateWithLifecycle()
-    val isAdvancedAiEnabled by viewModel.isAdvancedAiEnabled.collectAsStateWithLifecycle()
     val manualMaxDepth by viewModel.manualMaxDepth.collectAsStateWithLifecycle()
-    
+    val aiGuidance by viewModel.aiGuidance.collectAsStateWithLifecycle()
+    val probabilities by viewModel.probabilities.collectAsStateWithLifecycle()
+
     val p1Symbol by viewModel.p1Symbol.collectAsStateWithLifecycle()
     val p2Symbol by viewModel.p2Symbol.collectAsStateWithLifecycle()
     val p1Color by viewModel.p1Color.collectAsStateWithLifecycle()
@@ -93,10 +98,20 @@ fun SettingsScreen(
     val p2Name by viewModel.p2Name.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val stickyWarningText = stringResource(R.string.sticky_settings_notice)
+
+    LaunchedEffect(Unit) {
+        viewModel.showStickyWarning.collect {
+            snackbarHostState.showSnackbar(stickyWarningText)
+        }
+    }
     val version = remember(context) {
         try {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
-        } catch (_: Exception) { "1.0.0" }
+        } catch (_: Exception) {
+            "1.0.0"
+        }
     }
     val year = Calendar.getInstance().get(Calendar.YEAR)
 
@@ -107,7 +122,8 @@ fun SettingsScreen(
                     Icon(MyIcons.ArrowBack, contentDescription = stringResource(R.string.cancel))
                 }
             })
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -120,45 +136,48 @@ fun SettingsScreen(
         ) {
             // --- 1. GAMEPLAY RULES ---
             SettingsCategoryHeader(stringResource(R.string.category_gameplay))
-            
+
+            val randomLabel = stringResource(R.string.random)
             SettingSelector(
                 title = stringResource(R.string.first_move),
                 dataList = FirstMoveBehavior.entries,
                 selected = firstMoveBehavior,
-                labelMapper = { (it as FirstMoveBehavior).name },
-                onItemSelect = { viewModel.setFirstMoveBehavior(it as FirstMoveBehavior) }
-            )
+                labelMapper = { behavior ->
+                    when (behavior as FirstMoveBehavior) {
+                        FirstMoveBehavior.PLAYER_X -> p1Name
+                        FirstMoveBehavior.PLAYER_O -> p2Name
+                        FirstMoveBehavior.RANDOM -> randomLabel
+                    }
+                },
+                onItemSelect = { viewModel.setFirstMoveBehavior(it as FirstMoveBehavior) })
 
             SettingSelector(
                 title = stringResource(R.string.next_game_start),
                 dataList = NextMoveBehavior.entries,
                 selected = nextMoveBehavior,
                 labelMapper = { (it as NextMoveBehavior).name },
-                onItemSelect = { viewModel.setNextMoveBehavior(it as NextMoveBehavior) }
-            )
+                onItemSelect = { viewModel.setNextMoveBehavior(it as NextMoveBehavior) })
 
             // --- PLAYER CUSTOMIZATION ---
             SettingsCategoryHeader(stringResource(R.string.category_player_customization))
-            
+
             PlayerCustomizationBlock(
-                title = stringResource(R.string.player_x),
+                title = stringResource(R.string.player_1),
                 name = p1Name,
                 symbol = p1Symbol,
                 color = p1Color,
                 onNameChange = { viewModel.setP1Name(it) },
                 onSymbolChange = { if (it != p2Symbol) viewModel.setP1Symbol(it) },
-                onColorChange = { viewModel.setP1Color(it) }
-            )
+                onColorChange = { viewModel.setP1Color(it) })
 
             PlayerCustomizationBlock(
-                title = stringResource(R.string.player_o),
+                title = stringResource(R.string.player_2),
                 name = p2Name,
                 symbol = p2Symbol,
                 color = p2Color,
                 onNameChange = { viewModel.setP2Name(it) },
                 onSymbolChange = { if (it != p1Symbol) viewModel.setP2Symbol(it) },
-                onColorChange = { viewModel.setP2Color(it) }
-            )
+                onColorChange = { viewModel.setP2Color(it) })
 
             if (p1Symbol == p2Symbol) {
                 Text(
@@ -170,21 +189,20 @@ fun SettingsScreen(
 
             // --- 2. AI CONFIGURATION ---
             SettingsCategoryHeader(stringResource(R.string.category_ai))
-            
+
             Column(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 SettingSelector(
                     title = stringResource(R.string.difficulty),
                     dataList = AiDifficulty.entries,
                     selected = aiDifficulty,
                     labelMapper = { data ->
-                        val res = when(data as AiDifficulty) {
+                        val res = when (data as AiDifficulty) {
                             AiDifficulty.EASY -> R.string.mode_easy
                             AiDifficulty.MEDIUM -> R.string.mode_medium
                             AiDifficulty.HARD -> R.string.mode_hard
@@ -192,44 +210,47 @@ fun SettingsScreen(
                         }
                         stringResource(res)
                     },
-                    onItemSelect = { viewModel.setAiDifficulty(it as AiDifficulty) }
-                )
+                    onItemSelect = { viewModel.setAiDifficulty(it as AiDifficulty) })
 
-                Text(stringResource(R.string.ai_skill_level, aiStrength), style = MaterialTheme.typography.labelLarge)
+                val areAiSlidersEnabled = aiDifficulty != AiDifficulty.IMPOSSIBLE
+
+                Text(
+                    stringResource(R.string.ai_skill_level, if (areAiSlidersEnabled) aiStrength else 100),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (areAiSlidersEnabled) Color.Unspecified else MaterialTheme.colorScheme.outline
+                )
                 Slider(
-                    value = aiStrength.toFloat(),
+                    value = if (areAiSlidersEnabled) aiStrength.toFloat() else 100f,
                     onValueChange = { viewModel.setAiStrength(it.toInt()) },
-                    valueRange = 1f..100f
+                    valueRange = 1f..100f,
+                    enabled = areAiSlidersEnabled
                 )
 
-                SwitchSetting(
-                    checked = isAdvancedAiEnabled,
-                    onCheckedChange = { viewModel.toggleAdvancedAi() },
-                    text = stringResource(R.string.advanced_ai)
-                )
-
-                AnimatedVisibility(visible = isAdvancedAiEnabled) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.manual_depth, manualMaxDepth), style = MaterialTheme.typography.bodySmall)
-                        Slider(
-                            value = manualMaxDepth.toFloat(),
-                            onValueChange = { viewModel.setManualMaxDepth(it.toInt()) },
-                            valueRange = 2f..12f,
-                            steps = 9
-                        )
-                        Text(
-                            stringResource(R.string.depth_warning),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(R.string.manual_depth, if (areAiSlidersEnabled) manualMaxDepth else aiGuidance.recommendedDepth),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (areAiSlidersEnabled) Color.Unspecified else MaterialTheme.colorScheme.outline
+                    )
+                    Slider(
+                        value = if (areAiSlidersEnabled) manualMaxDepth.toFloat() else aiGuidance.recommendedDepth.toFloat(),
+                        onValueChange = { viewModel.setManualMaxDepth(it.toInt()) },
+                        valueRange = 2f..12f,
+                        steps = 9,
+                        enabled = areAiSlidersEnabled
+                    )
+                    
+                    AiGuidanceInfo(aiGuidance)
                 }
             }
 
             // --- 3. BOARD SETUP ---
             SettingsCategoryHeader(stringResource(R.string.category_board))
-            
-            Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     NumberPicker(
                         label = stringResource(R.string.rows),
@@ -246,7 +267,7 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                
+
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     NumberPicker(
                         label = stringResource(R.string.layers),
@@ -263,70 +284,118 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
+
+                ProbabilityAnalysisCard(
+                    probabilities = probabilities,
+                    p1Name = p1Name,
+                    p2Name = p2Name,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
             // --- 4. AUDIO & FEEDBACK ---
             SettingsCategoryHeader(stringResource(R.string.category_audio_feedback))
-            
-            Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SwitchSetting(checked = bgmEnabled, onCheckedChange = { viewModel.toggleBgm() }, text = stringResource(R.string.bgm))
-                SwitchSetting(checked = soundEnabled, onCheckedChange = { viewModel.toggleSound() }, text = stringResource(R.string.sfx))
-                SwitchSetting(checked = hapticEnabled, onCheckedChange = { viewModel.toggleHaptic() }, text = stringResource(R.string.haptics))
+
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SwitchSetting(
+                    checked = bgmEnabled,
+                    onCheckedChange = { viewModel.toggleBgm() },
+                    text = stringResource(R.string.bgm)
+                )
+                SwitchSetting(
+                    checked = soundEnabled,
+                    onCheckedChange = { viewModel.toggleSound() },
+                    text = stringResource(R.string.sfx)
+                )
+                SwitchSetting(
+                    checked = hapticEnabled,
+                    onCheckedChange = { viewModel.toggleHaptic() },
+                    text = stringResource(R.string.haptics)
+                )
             }
 
             // --- 5. APPEARANCE & SYSTEM ---
             SettingsCategoryHeader(stringResource(R.string.category_appearance))
-            
+
             SettingSelector(
                 title = stringResource(R.string.style),
                 dataList = BoardStyle.entries,
                 selected = boardStyle,
                 labelMapper = { (it as BoardStyle).name },
-                onItemSelect = { viewModel.setBoardStyle(it as BoardStyle) }
-            )
+                onItemSelect = { viewModel.setBoardStyle(it as BoardStyle) })
 
             SettingSelector(
                 title = stringResource(R.string.theme),
                 dataList = AppTheme.entries,
                 selected = themeDark,
                 labelMapper = { (it as AppTheme).name },
-                onItemSelect = { viewModel.setTheme(it as AppTheme) }
-            )
+                onItemSelect = { viewModel.setTheme(it as AppTheme) })
 
-            Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SwitchSetting(checked = dynamicColor, onCheckedChange = { viewModel.toggleDynamicColor() }, text = stringResource(R.string.dynamic_color))
-                SwitchSetting(checked = bgAnimationEnabled, onCheckedChange = { viewModel.toggleBgAnimation() }, text = stringResource(R.string.bg_animation))
-                SwitchSetting(checked = isImmersiveMode, onCheckedChange = { viewModel.toggleImmersiveMode() }, text = stringResource(R.string.immersive))
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SwitchSetting(
+                    checked = dynamicColor,
+                    onCheckedChange = { viewModel.toggleDynamicColor() },
+                    text = stringResource(R.string.dynamic_color)
+                )
+                SwitchSetting(
+                    checked = bgAnimationEnabled,
+                    onCheckedChange = { viewModel.toggleBgAnimation() },
+                    text = stringResource(R.string.bg_animation)
+                )
+                SwitchSetting(
+                    checked = isImmersiveMode,
+                    onCheckedChange = { viewModel.toggleImmersiveMode() },
+                    text = stringResource(R.string.immersive)
+                )
             }
 
             SettingsCategoryHeader(stringResource(R.string.category_system))
-            
+
             SettingSelector(
                 title = stringResource(R.string.language),
                 dataList = AppLanguage.entries,
                 selected = appLanguage,
                 labelMapper = {
-                    when(it as AppLanguage) {
+                    when (it as AppLanguage) {
                         AppLanguage.ENGLISH -> stringResource(R.string.language_english)
                         AppLanguage.HINDI -> stringResource(R.string.language_hindi)
                     }
                 },
-                onItemSelect = { viewModel.setLanguage(it as AppLanguage) }
-            )
+                onItemSelect = { viewModel.setLanguage(it as AppLanguage) })
 
             SettingSelector(
                 title = stringResource(R.string.orientation),
                 dataList = Orientation.entries,
                 selected = orientation,
                 labelMapper = { (it as Orientation).name },
-                onItemSelect = { viewModel.setOrientation(it as Orientation) }
-            )
+                onItemSelect = { viewModel.setOrientation(it as Orientation) })
 
             Spacer(modifier = Modifier.height(16.dp))
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Version v$version", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-                Text("© $year Tic Tac Toe Game", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-                Text(stringResource(R.string.developed_by), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    "Version v$version",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+                Text(
+                    "© $year Tic Tac Toe Game",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+                Text(
+                    stringResource(R.string.developed_by),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
@@ -341,17 +410,33 @@ private fun PlayerCustomizationBlock(
     color: Long,
     onNameChange: (String) -> Unit,
     onSymbolChange: (String) -> Unit,
-    onColorChange: (Long) -> Unit
+    onColorChange: (Long) -> Unit,
 ) {
     Card(
-        modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                alpha = 0.3f
+            )
+        ),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(color))
-            
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(
+            modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(color)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = onNameChange,
@@ -362,11 +447,11 @@ private fun PlayerCustomizationBlock(
                 )
                 OutlinedTextField(
                     value = symbol,
-                    onValueChange = { 
+                    onValueChange = {
                         if (it.isEmpty() || isSingleVisualCharacter(it)) {
                             onSymbolChange(it)
                         }
-                    }, 
+                    },
                     label = { Text(stringResource(R.string.player_symbol)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
@@ -383,11 +468,21 @@ private fun PlayerCustomizationBlock(
 @Composable
 private fun ColorRow(selectedColor: Long, onColorSelect: (Long) -> Unit) {
     val colors = listOf(
-        0xFFE91E63, 0xFF2196F3, 0xFF4CAF50, 0xFFFFEB3B, 0xFFFF9800,
-        0xFF9C27B0, 0xFF00BCD4, 0xFF795548, 0xFF607D8B, 0xFFFFFFFF
+        0xFFE91E63,
+        0xFF2196F3,
+        0xFF4CAF50,
+        0xFFFFEB3B,
+        0xFFFF9800,
+        0xFF9C27B0,
+        0xFF00BCD4,
+        0xFF795548,
+        0xFF607D8B,
+        0xFFFFFFFF
     )
     Row(
-        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         colors.forEach { color ->
@@ -398,11 +493,12 @@ private fun ColorRow(selectedColor: Long, onColorSelect: (Long) -> Unit) {
                     .background(Color(color))
                     .border(
                         width = if (selectedColor == color) 3.dp else 1.dp,
-                        color = if (selectedColor == color) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.3f),
+                        color = if (selectedColor == color) MaterialTheme.colorScheme.primary else Color.Gray.copy(
+                            alpha = 0.3f
+                        ),
                         shape = RoundedCornerShape(18.dp)
                     )
-                    .clickable { onColorSelect(color) }
-            )
+                    .clickable { onColorSelect(color) })
         }
     }
 }
@@ -414,6 +510,53 @@ private fun isSingleVisualCharacter(s: String): Boolean {
     it.first()
     val next = it.next()
     return next == s.length
+}
+
+@Composable
+private fun AiGuidanceInfo(guidance: com.tuto.alokkumar.tictactoe.viewModel.AiGuidance) {
+    val outlookText = when(guidance.matchOutlook) {
+        "Invincible: AI will always Win or Draw." -> stringResource(R.string.ai_outlook_invincible)
+        "Casual: AI will make frequent mistakes." -> stringResource(R.string.ai_outlook_casual)
+        "Human-like: AI may miss strategic moves." -> stringResource(R.string.ai_outlook_human)
+        else -> stringResource(R.string.ai_outlook_pro)
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = when(guidance.performanceOutlook) {
+                com.tuto.alokkumar.tictactoe.viewModel.PerformanceLevel.FAST -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                com.tuto.alokkumar.tictactoe.viewModel.PerformanceLevel.BALANCED -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                else -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            }
+        ),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = when(guidance.performanceOutlook) {
+                        com.tuto.alokkumar.tictactoe.viewModel.PerformanceLevel.FAST -> MyIcons.Done
+                        com.tuto.alokkumar.tictactoe.viewModel.PerformanceLevel.BALANCED -> MyIcons.Info
+                        else -> MyIcons.Info
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.ai_recommended_depth, guidance.recommendedDepth),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Text(outlookText, style = MaterialTheme.typography.bodySmall)
+            guidance.warning?.let {
+                Text(stringResource(R.string.ai_perf_lag_warning), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
 }
 
 @Composable

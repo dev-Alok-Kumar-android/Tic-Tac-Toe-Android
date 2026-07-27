@@ -70,13 +70,17 @@ fun MenuScreen(
     val aiDifficulty by viewModel.aiDifficulty.collectAsStateWithLifecycle()
     val firstMoveBehavior by viewModel.firstMoveBehavior.collectAsStateWithLifecycle()
     val aiStrength by viewModel.aiStrength.collectAsStateWithLifecycle()
+    val p1Name by viewModel.p1Name.collectAsStateWithLifecycle()
+    val p2Name by viewModel.p2Name.collectAsStateWithLifecycle()
 
     MenuScreenContent(
         boardSize = boardSize,
         aiDifficulty = aiDifficulty,
         firstMoveBehavior = firstMoveBehavior,
         aiStrength = aiStrength,
-        onStartGame = { 
+        p1Name = p1Name,
+        p2Name = p2Name,
+        onStartGame = {
             onStartGame(aiDifficulty, boardSize) 
         },
         onViewStats = onViewStats,
@@ -96,6 +100,8 @@ fun MenuScreenContent(
     aiDifficulty: AiDifficulty,
     firstMoveBehavior: FirstMoveBehavior,
     aiStrength: Int,
+    p1Name: String,
+    p2Name: String,
     onStartGame: () -> Unit,
     onViewStats: () -> Unit,
     onExit: () -> Unit,
@@ -184,6 +190,8 @@ fun MenuScreenContent(
                             selectedAiDifficulty = aiDifficulty,
                             firstMoveBehavior = firstMoveBehavior,
                             aiStrength = aiStrength,
+                            p1Name = p1Name,
+                            p2Name = p2Name,
                             onBoardSizeChange = onBoardSizeChange,
                             onAiDifficultyChange = onAiDifficultyChange,
                             onFirstMoveBehaviorChange = onFirstMoveBehaviorChange
@@ -246,6 +254,8 @@ fun MenuScreenContent(
                         selectedAiDifficulty = aiDifficulty,
                         firstMoveBehavior = firstMoveBehavior,
                         aiStrength = aiStrength,
+                        p1Name = p1Name,
+                        p2Name = p2Name,
                         onBoardSizeChange = onBoardSizeChange,
                         onAiDifficultyChange = onAiDifficultyChange,
                         onFirstMoveBehaviorChange = onFirstMoveBehaviorChange
@@ -273,6 +283,8 @@ private fun QuickSetupCard(
     selectedAiDifficulty: AiDifficulty,
     firstMoveBehavior: FirstMoveBehavior,
     aiStrength: Int,
+    p1Name: String,
+    p2Name: String,
     onBoardSizeChange: (BoardSize) -> Unit,
     onAiDifficultyChange: (AiDifficulty) -> Unit,
     onFirstMoveBehaviorChange: (FirstMoveBehavior) -> Unit
@@ -341,11 +353,12 @@ private fun QuickSetupCard(
             }
 
             if (selectedAiDifficulty == AiDifficulty.HARD || selectedAiDifficulty == AiDifficulty.IMPOSSIBLE) {
-                 val strengthText = if (selectedAiDifficulty == AiDifficulty.IMPOSSIBLE) "100" else aiStrength.toString()
-                 Text(
-                    text = stringResource(R.string.ai_skill_level, strengthText.toInt()),
+                val displayedStrength = if (selectedAiDifficulty == AiDifficulty.IMPOSSIBLE) 100 else aiStrength
+                Text(
+                    text = stringResource(R.string.ai_skill_level, displayedStrength),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = if (selectedAiDifficulty == AiDifficulty.IMPOSSIBLE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                    fontWeight = if (selectedAiDifficulty == AiDifficulty.IMPOSSIBLE) FontWeight.Bold else FontWeight.Normal
                 )
             }
 
@@ -365,11 +378,18 @@ private fun QuickSetupCard(
                 onItemSelect = { onAiDifficultyChange(it as AiDifficulty) }
             )
 
+            val randomLabel = stringResource(R.string.random)
             SettingSelector(
                 title = stringResource(R.string.first_move),
                 dataList = FirstMoveBehavior.entries,
                 selected = firstMoveBehavior,
-                labelMapper = { (it as FirstMoveBehavior).name },
+                labelMapper = { behavior ->
+                    when (behavior as FirstMoveBehavior) {
+                        FirstMoveBehavior.PLAYER_X -> p1Name
+                        FirstMoveBehavior.PLAYER_O -> p2Name
+                        FirstMoveBehavior.RANDOM -> randomLabel
+                    }
+                },
                 onItemSelect = { onFirstMoveBehaviorChange(it as FirstMoveBehavior) }
             )
         }
@@ -474,6 +494,8 @@ private fun MenuPreviewPortrait() {
         aiDifficulty = AiDifficulty.HARD,
         firstMoveBehavior = FirstMoveBehavior.PLAYER_X,
         aiStrength = 75,
+        p1Name = "Player 1",
+        p2Name = "Player 2",
         onStartGame = {},
         onViewStats = {},
         onExit = {},
@@ -494,6 +516,8 @@ private fun MenuPreviewLandscape() {
         aiDifficulty = AiDifficulty.HARD,
         firstMoveBehavior = FirstMoveBehavior.PLAYER_X,
         aiStrength = 75,
+        p1Name = "Player 1",
+        p2Name = "Player 2",
         onStartGame = {},
         onViewStats = {},
         onExit = {},

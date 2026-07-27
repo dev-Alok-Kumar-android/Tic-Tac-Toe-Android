@@ -1,5 +1,6 @@
 package com.tuto.alokkumar.tictactoe.data
 
+import androidx.annotation.Keep
 import kotlinx.serialization.Serializable
 
 /**
@@ -7,15 +8,16 @@ import kotlinx.serialization.Serializable
  *
  * @property dateMillis Timestamp in milliseconds indicating when the match occurred or was saved.
  * @property difficulty The [AiDifficulty] configuration used during the match.
- * @property state The final or saved snapshot of [GameState] representing the match board and metrics.
+ * @property state The final or saved snapshot of [GameStateEntity] representing the match board and metrics.
  * @property gameMode The [GameMode] (PvP vs AI) used during the match.
  */
+@Keep
 @Serializable
 data class GameHistory(
     val matchId: String,
     val dateMillis: Long = System.currentTimeMillis(),
     val difficulty: AiDifficulty,
-    val state: GameState,
+    val state: GameStateEntity,
     val gameMode: GameMode = GameMode.VS_AI,
     val humanSymbol: String = "X",
     val p1Symbol: String = "X",
@@ -23,5 +25,7 @@ data class GameHistory(
     val p1Name: String = "Player 1",
     val p2Name: String = "Player 2",
     val p1Color: Long = 0xFFE91E63,
-    val p2Color: Long = 0xFF2196F3
+    val p2Color: Long = 0xFF2196F3,
+    val aiStrength: Int = 100,
+    val manualMaxDepth: Int = 6
 )

@@ -27,10 +27,9 @@
     <string name="draw_message">It\'s a Draw!</string>
     <string name="winner_label">Winner: %1$s 🎉</string>
     <string name="opponent_thinking">Opponent Thinking…</string>
+    <string name="ai_thinking">AI Thinking…</string>
     <string name="analyzing">Analyzing…</string>
     <string name="restart_match">Restart Match</string>
-    <string name="player_x">Player X</string>
-    <string name="player_o">Player O</string>
     <string name="ai_o">AI (O)</string>
     <string name="draws">Draws</string>
     <string name="clear_history_title">Clear History</string>
@@ -107,8 +106,37 @@
     <string name="layers_list">Layers List</string>
     <string name="jump_to_last">Jump to Last Played</string>
     <string name="mode_pvp">PvP</string>
+    <string name="player_1">Player 1</string>
+    <string name="player_2">Player 2</string>
+    <string name="random">Random</string>
     <string name="mode_easy">Easy</string>
     <string name="mode_medium">Medium</string>
     <string name="mode_hard">Hard</string>
     <string name="mode_impossible">Impossible</string>
+
+    <!-- AI Guidance & Scaling -->
+    <string name="ai_recommended_depth">Search Depth: %1$d (Recommended)</string>
+    <string name="ai_outlook_invincible">Invincible: AI will always Win or Draw.</string>
+    <string name="ai_outlook_casual">Casual: AI will make frequent mistakes.</string>
+    <string name="ai_outlook_human">Human-like: AI may miss strategic moves.</string>
+    <string name="ai_outlook_pro">Professional: AI is highly strategic.</string>
+    <string name="ai_perf_lag_warning">Large board + high depth might cause calculation lag.</string>
+
+    <!-- Board Info -->
+    <string name="layer_label">Layer %1$d / %2$d</string>
+    <string name="last_played_layer">Last Played: L%1$d</string>
+    <string name="last_played_here">(Last played here)</string>
+    <string name="player_stats_template">%1$s (%2$s): %3$d</string>
+
+    <!-- Settings Feedback -->
+    <string name="sticky_settings_notice">Gameplay changes will apply to the next match.</string>
+
+    <!-- Match Analysis -->
+    <string name="match_analysis">Match Fairness Analysis</string>
+    <string name="win_chance">Win Chance: %1$d%%</string>
+    <string name="draw_chance">Draw Chance: %1$d%%</string>
+    <string name="analysis_sample_size">Based on %1$d simulated matches.</string>
+    <string name="p1_advantage">Player 1 Advantage</string>
+    <string name="p2_advantage">Player 2 Advantage</string>
+    <string name="fair_match">Balanced Match</string>
 </resources>

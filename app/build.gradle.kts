@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    id("kotlin-parcelize")
 }
 
 android {
@@ -14,8 +15,8 @@ android {
         applicationId = "com.tuto.alokkumar.tictactoe"
         minSdk = 25
         targetSdk = 37
-        versionCode = 10
-        versionName = "3.0.0-alpha"
+        versionCode = 11
+        versionName = "3.0.0-alpha2"
     }
 
     buildTypes {

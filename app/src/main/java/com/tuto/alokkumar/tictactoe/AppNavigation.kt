@@ -60,7 +60,7 @@ fun AppNavigation(
     // Handle immediate BGM playback when toggled ON in settings
     LaunchedEffect(isBgmEnabled) {
         if (isBgmEnabled) {
-            settingsViewModel.playBgm(context)
+            settingsViewModel.playBgm()
         } else {
             settingsViewModel.pauseBgm()
         }
@@ -70,7 +70,7 @@ fun AppNavigation(
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    if (isBgmEnabled) settingsViewModel.playBgm(context)
+                    if (isBgmEnabled) settingsViewModel.playBgm()
                 }
                 Lifecycle.Event.ON_PAUSE -> {
                     settingsViewModel.pauseBgm()

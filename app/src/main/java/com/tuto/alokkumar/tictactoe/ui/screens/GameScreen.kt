@@ -52,7 +52,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tuto.alokkumar.tictactoe.R
 import com.tuto.alokkumar.tictactoe.data.BoardStyle
-import com.tuto.alokkumar.tictactoe.data.GameState
 import com.tuto.alokkumar.tictactoe.ui.components.AnimatedLinesBackground
 import com.tuto.alokkumar.tictactoe.ui.components.GameBoard
 import com.tuto.alokkumar.tictactoe.ui.components.GameInfoSection
@@ -60,6 +59,7 @@ import com.tuto.alokkumar.tictactoe.ui.components.MyIcons
 import com.tuto.alokkumar.tictactoe.ui.components.PauseScreen
 import com.tuto.alokkumar.tictactoe.ui.components.ScoreBoard
 import com.tuto.alokkumar.tictactoe.ui.components.VictoryEffects
+import com.tuto.alokkumar.tictactoe.ui.model.GameStateUi
 import com.tuto.alokkumar.tictactoe.viewModel.GameViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,7 +93,10 @@ fun GameScreen(
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) viewModel.pauseGame()
+            if (event == Lifecycle.Event.ON_STOP) {
+                viewModel.pauseGame()
+                viewModel.saveHistory()
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -128,7 +131,7 @@ fun GameScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameContent(
-    state: GameState,
+    state: GameStateUi,
     isOpponentThinking: Boolean,
     isPaused: Boolean,
     isVsAI: Boolean,
@@ -165,7 +168,7 @@ fun GameContent(
                 )
             }
 
-            if (state.winner != null && state.winner != "D") {
+            if (state.winnerSymbol != null && state.winnerSymbol != "D") {
                 VictoryEffects()
             }
 
@@ -179,7 +182,7 @@ fun GameContent(
                     onSettings = onSettings
                 )
             } else {
-                val isAiTurn = isVsAI && state.currentPlayer != humanSymbol && state.winner == null
+                val isAiTurn = isVsAI && state.currentPlayerSymbol != humanSymbol && state.winnerSymbol == null
                 
                 if (isLandscape) {
                     Row(
@@ -193,8 +196,8 @@ fun GameContent(
                             verticalArrangement = Arrangement.Center
                         ) {
                             ScoreBoard(
-                                xWins = state.xWins,
-                                oWins = state.oWins,
+                                xWins = state.p1Wins,
+                                oWins = state.p2Wins,
                                 draws = state.draws,
                                 p1Name = p1Name,
                                 p2Name = p2Name,
@@ -205,9 +208,10 @@ fun GameContent(
                             )
                             Spacer(Modifier.height(16.dp))
                             GameInfoSection(
-                                currentPlayerSymbol = state.currentPlayer,
-                                winnerSymbol = state.winner,
+                                currentPlayerSymbol = state.currentPlayerSymbol,
+                                winnerSymbol = state.winnerSymbol,
                                 isAiTurn = isAiTurn,
+                                isOpponentThinking = isOpponentThinking,
                                 p1Name = p1Name,
                                 p2Name = p2Name,
                                 p1Symbol = p1Symbol,
@@ -243,7 +247,7 @@ fun GameContent(
                                     lastMove = state.lastMove,
                                     onCellClick = onCellClick,
                                     boardStyle = boardStyle,
-                                    winner = state.winner
+                                    winner = state.winnerSymbol
                                 )
                             }
                         }
@@ -255,8 +259,8 @@ fun GameContent(
                         verticalArrangement = Arrangement.SpaceEvenly
                     ) {
                         ScoreBoard(
-                            xWins = state.xWins,
-                            oWins = state.oWins,
+                            xWins = state.p1Wins,
+                            oWins = state.p2Wins,
                             draws = state.draws,
                             p1Name = p1Name,
                             p2Name = p2Name,
@@ -267,9 +271,10 @@ fun GameContent(
                         )
                         
                         GameInfoSection(
-                            currentPlayerSymbol = state.currentPlayer,
-                            winnerSymbol = state.winner,
+                            currentPlayerSymbol = state.currentPlayerSymbol,
+                            winnerSymbol = state.winnerSymbol,
                             isAiTurn = isAiTurn,
+                            isOpponentThinking = isOpponentThinking,
                             p1Name = p1Name,
                             p2Name = p2Name,
                             p1Symbol = p1Symbol,
@@ -299,7 +304,7 @@ fun GameContent(
                                 lastMove = state.lastMove,
                                 onCellClick = onCellClick,
                                 boardStyle = boardStyle,
-                                winner = state.winner
+                                winner = state.winnerSymbol
                             )
                         }
                     }
@@ -414,7 +419,7 @@ fun LayerSelector(
                     Column(horizontalAlignment = Alignment.Start) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Layer ${selected + 1} / $count",
+                                text = stringResource(R.string.layer_label, selected + 1, count),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Black
                             )
@@ -429,7 +434,7 @@ fun LayerSelector(
                         }
                         if (lastMoveLayer != null && lastMoveLayer != selected) {
                             Text(
-                                text = "Last Played: L${lastMoveLayer + 1}",
+                                text = stringResource(R.string.last_played_layer, lastMoveLayer + 1),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -448,14 +453,14 @@ fun LayerSelector(
                             text = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        "Layer ${i + 1}",
+                                        stringResource(R.string.layer_label, i + 1, count),
                                         fontWeight = if(selected == i) FontWeight.Bold else FontWeight.Normal,
                                         color = if(selected == i) MaterialTheme.colorScheme.primary else Color.Unspecified
                                     )
                                     if (lastMoveLayer == i) {
                                         Spacer(Modifier.width(8.dp))
                                         Text(
-                                            "(Last played here)",
+                                            stringResource(R.string.last_played_here),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.secondary
                                         )

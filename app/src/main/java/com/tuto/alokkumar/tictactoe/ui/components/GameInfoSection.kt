@@ -24,6 +24,7 @@ fun GameInfoSection(
     currentPlayerSymbol: String,
     winnerSymbol: String?,
     isAiTurn: Boolean,
+    isOpponentThinking: Boolean,
     p1Name: String,
     p2Name: String,
     p1Symbol: String,
@@ -45,10 +46,10 @@ fun GameInfoSection(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         AnimatedVisibility(visible = winnerSymbol == null) {
-            val turnText = if (isAiTurn) {
-                stringResource(R.string.opponent_thinking)
-            } else {
-                stringResource(R.string.turn_label, "$currentPlayerName ($currentPlayerSymbol)")
+            val turnText = when {
+                isAiTurn -> stringResource(R.string.ai_thinking)
+                isOpponentThinking -> stringResource(R.string.opponent_thinking)
+                else -> stringResource(R.string.turn_label, "$currentPlayerName ($currentPlayerSymbol)")
             }
             Text(
                 text = turnText,

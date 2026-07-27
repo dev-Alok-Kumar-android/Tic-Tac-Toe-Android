@@ -27,10 +27,9 @@
     <string name="draw_message">मैच बराबर रहा!</string>
     <string name="winner_label">विजेता: %1$s 🎉</string>
     <string name="opponent_thinking">विरोधी सोच रहा है…</string>
+    <string name="ai_thinking">AI सोच रहा है…</string>
     <string name="analyzing">विश्लेषण कर रहा है…</string>
     <string name="restart_match">मैच दोबारा शुरू करें</string>
-    <string name="player_x">खिलाड़ी X</string>
-    <string name="player_o">खिलाड़ी O</string>
     <string name="ai_o">AI (O)</string>
     <string name="draws">बराबरी</string>
     <string name="clear_history_title">इतिहास साफ़ करें</string>
@@ -107,8 +106,37 @@
     <string name="layers_list">परतों की सूची</string>
     <string name="jump_to_last">आखरी चाल पर जाएं</string>
     <string name="mode_pvp">खिलाड़ी बनाम खिलाड़ी</string>
+    <string name="player_1">खिलाड़ी 1</string>
+    <string name="player_2">खिलाड़ी 2</string>
+    <string name="random">रैंडम</string>
     <string name="mode_easy">आसान</string>
     <string name="mode_medium">सामान्य</string>
     <string name="mode_hard">कठिन</string>
     <string name="mode_impossible">असंभव</string>
+
+    <!-- AI Guidance & Scaling -->
+    <string name="ai_recommended_depth">सर्च गहराई: %1$d (अनुशंसित)</string>
+    <string name="ai_outlook_invincible">अजेय: AI हमेशा जीतेगा या ड्रा होगा।</string>
+    <string name="ai_outlook_casual">कैजुअल: AI बार-बार गलतियां करेगा।</string>
+    <string name="ai_outlook_human">इंसान जैसा: AI रणनीतिक चालें चूक सकता है।</string>
+    <string name="ai_outlook_pro">प्रोफेशनल: AI अत्यधिक रणनीतिक है।</string>
+    <string name="ai_perf_lag_warning">बड़ा बोर्ड + अधिक गहराई के कारण गणना में देरी हो सकती है।</string>
+
+    <!-- Board Info -->
+    <string name="layer_label">परत %1$d / %2$d</string>
+    <string name="last_played_layer">अंतिम चाल: L%1$d</string>
+    <string name="last_played_here">(अंतिम चाल यहीं थी)</string>
+    <string name="player_stats_template">%1$s (%2$s): %3$d</string>
+
+    <!-- Settings Feedback -->
+    <string name="sticky_settings_notice">गेमप्ले में बदलाव अगले मैच में लागू होंगे।</string>
+
+    <!-- Match Analysis -->
+    <string name="match_analysis">मैच निष्पक्षता विश्लेषण</string>
+    <string name="win_chance">जीत की संभावना: %1$d%%</string>
+    <string name="draw_chance">ड्रॉ की संभावना: %1$d%%</string>
+    <string name="analysis_sample_size">%1$d नकली मैचों के आधार पर।</string>
+    <string name="p1_advantage">खिलाड़ी 1 का फायदा</string>
+    <string name="p2_advantage">खिलाड़ी 2 का फायदा</string>
+    <string name="fair_match">संतुलित मैच</string>
 </resources>
